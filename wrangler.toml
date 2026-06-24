@@ -8,4 +8,4 @@ bucket = "./public"
 [[d1_databases]]
 binding = "DB"
 database_name = "zkl-production-db"
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "f5be8ec4-e97b-404f-bb30-565a6b37664e"
