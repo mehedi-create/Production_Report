@@ -1,0 +1,21 @@
+{
+  "name": "zkl",
+  "version": "1.0.0",
+  "description": "Zakaria Printing Unit-1 Production and Reporting System",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "wrangler": "^4.104.0"
+  }
+}
