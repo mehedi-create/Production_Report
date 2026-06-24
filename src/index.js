@@ -1,7 +1,6 @@
 import { generateExcelReport } from './excel.js';
 import { generatePdfReport } from './pdf.js';
 
-// ফ্রন্টএন্ড এইচটিএমএল কোড ডাইনামিক ডাটালিস্ট ও এরর ট্র্যাকিং সহ
 const HTML_CONTENT = `
 <!DOCTYPE html>
 <html lang="en">
@@ -32,11 +31,29 @@ const HTML_CONTENT = `
         .btn-dl:hover { background: #059669; }
         .btn-dl.pdf { background: #ef4444; }
         .btn-dl.pdf:hover { background: #dc2626; }
+        
+        /* Modern Custom Notification UI */
+        #notification {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background: white; padding: 16px 24px; border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 9999; display: flex; align-items: center; gap: 12px; font-weight: 600; 
+            width: 85%; max-width: 450px; font-size: 15px; line-height: 1.4;
+        }
+        #notification.show { top: 30px; }
+        #notification.error { border-left: 6px solid #ef4444; color: #b91c1c; }
+        #notification.success { border-left: 6px solid #10b981; color: #047857; }
+        .icon { font-size: 20px; }
     </style>
 </head>
 <body>
+
+<div id="notification">
+    <span class="icon" id="noti-icon"></span>
+    <span id="noti-text"></span>
+</div>
+
 <div class="container">
-    
     <div id="view-home" class="view active">
         <h2>Zakaria Printing Unit-1 Control Panel</h2>
         <div class="menu-grid">
@@ -95,6 +112,24 @@ const HTML_CONTENT = `
 </div>
 
 <script>
+    // Custom Beautiful Notification Function
+    function showNotification(message, type) {
+        const noti = document.getElementById('notification');
+        const notiText = document.getElementById('noti-text');
+        const notiIcon = document.getElementById('noti-icon');
+        
+        noti.className = type === 'error' ? 'error' : 'success';
+        notiText.innerText = message;
+        notiIcon.innerText = type === 'error' ? '⚠️' : '✅';
+        
+        noti.classList.add('show');
+        
+        // ৩ সেকেন্ড পর নোটিফিকেশন নিজে থেকে চলে যাবে
+        setTimeout(() => {
+            noti.classList.remove('show');
+        }, 3500);
+    }
+
     function navigate(viewId) {
         document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
@@ -103,18 +138,16 @@ const HTML_CONTENT = `
         }
     }
 
-    // ডাটাবেস থেকে বায়ার, স্টাইল এবং প্রিন্ট টাইপ ডাটা এনে লিস্টে সাজানো
     async function loadDatabaseSuggestions() {
         try {
             const res = await fetch('/api/suggestions');
             const result = await res.json();
             
             if (!res.ok) {
-                alert('⚠️ System Alert: Failed to fetch suggestions from DB.\\nReason: ' + (result.error || 'Unknown Cloud Error'));
+                showNotification('Failed to fetch data: ' + (result.error || 'Unknown Error'), 'error');
                 return;
             }
 
-            // Populate Buyers
             const buyerList = document.getElementById('buyer-suggestions');
             buyerList.innerHTML = '';
             result.buyers.forEach(name => {
@@ -123,7 +156,6 @@ const HTML_CONTENT = `
                 buyerList.appendChild(opt);
             });
 
-            // Populate Styles
             const styleList = document.getElementById('style-suggestions');
             styleList.innerHTML = '';
             result.styles.forEach(styleNo => {
@@ -132,7 +164,6 @@ const HTML_CONTENT = `
                 styleList.appendChild(opt);
             });
 
-            // Populate Print Types
             const ptList = document.getElementById('print-type-suggestions');
             ptList.innerHTML = '';
             result.print_types.forEach(pt => {
@@ -142,11 +173,10 @@ const HTML_CONTENT = `
             });
 
         } catch (err) {
-            alert('❌ Network Error: Unable to sync auto-suggestions with D1 Cloud.');
+            showNotification('Network Error: Unable to sync with D1 Cloud.', 'error');
         }
     }
 
-    // ডাটা সাবমিশন এবং অ্যাডভান্সড এরর হ্যান্ডলিং অ্যালার্ট
     document.getElementById('productionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = {
@@ -168,15 +198,15 @@ const HTML_CONTENT = `
             const result = await res.json();
             
             if (res.ok && result.success) {
-                alert('🎉 Success: Data securely saved to D1 SQL Matrix!');
+                showNotification('Success: Data securely saved!', 'success');
                 document.getElementById('productionForm').reset();
                 navigate('view-home');
             } else { 
-                // ডাটাবেসের সুনির্দিষ্ট এরর মেসেজ ইউজারের সামনে পপআপ করবে
-                alert('❌ Database Server Error (Code ' + res.status + '):\\n\\n→ ' + (result.error || 'Submission failed.')); 
+                // আগের বোরিং alert এর বদলে এখন সুন্দর নোটিফিকেশন দেখাবে
+                showNotification('Error: ' + (result.error || 'Submission failed.'), 'error'); 
             }
         } catch (err) { 
-            alert('❌ Critical Network Error: Could not connect to Cloudflare Worker Engine.'); 
+            showNotification('Critical Error: Could not connect to Server.', 'error'); 
         }
     });
 </script>
@@ -187,25 +217,18 @@ const HTML_CONTENT = `
 export default {
     async fetch(request, env, ctx) {
         const url = new URL(request.url);
-
         const headers = {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type"
         };
 
-        if (request.method === "OPTIONS") {
-            return new Response(null, { headers });
-        }
+        if (request.method === "OPTIONS") return new Response(null, { headers });
 
-        // ROUTE: GET /
         if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
-            return new Response(HTML_CONTENT, {
-                headers: { ...headers, "Content-Type": "text/html; charset=utf-8" }
-            });
+            return new Response(HTML_CONTENT, { headers: { ...headers, "Content-Type": "text/html; charset=utf-8" } });
         }
 
-        // NEW ROUTE: GET /api/suggestions (অটো ফিল্টারিং ডাটা প্রোভাইডার)
         if (request.method === "GET" && url.pathname === "/api/suggestions") {
             try {
                 const buyersData = await env.DB.prepare(`SELECT DISTINCT buyer FROM production WHERE buyer IS NOT NULL AND buyer != '' ORDER BY buyer ASC`).all();
@@ -214,22 +237,16 @@ export default {
 
                 const buyers = buyersData.results.map(r => r.buyer);
                 const styles = stylesData.results.map(r => r.style);
-                
-                // ডিফল্ট ৩টি ক্যাটাগরি ফিক্সড রাখা হলো, ডাটাবেসে নতুন কিছু যোগ হলে তাও যুক্ত হবে
                 const defaultPt = ['Stone Attached', 'Neck Print', 'Table Print'];
                 const dbPt = ptData.results.map(r => r.print_type);
                 const print_types = Array.from(new Set([...defaultPt, ...dbPt]));
 
-                return new Response(JSON.stringify({ buyers, styles, print_types }), {
-                    headers: { ...headers, "Content-Type": "application/json" }
-                });
+                return new Response(JSON.stringify({ buyers, styles, print_types }), { headers: { ...headers, "Content-Type": "application/json" } });
             } catch (err) {
-                // যদি টেবিল তৈরি না করা থাকে তবে তার সুনির্দিষ্ট মেসেজ রিটার্ন করবে
                 return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } });
             }
         }
 
-        // ROUTE: POST /api/save
         if (request.method === "POST" && url.pathname === "/api/save") {
             try {
                 const body = await request.json();
@@ -239,19 +256,12 @@ export default {
                     `INSERT INTO production (date, buyer, style, print_type, cm_dzn, quantity) VALUES (?, ?, ?, ?, ?, ?)`
                 ).bind(date, buyer, style, print_type, cm_dzn, quantity).run();
 
-                return new Response(JSON.stringify({ success: true }), { 
-                    headers: { ...headers, "Content-Type": "application/json" } 
-                });
+                return new Response(JSON.stringify({ success: true }), { headers: { ...headers, "Content-Type": "application/json" } });
             } catch (err) {
-                // ক্যাচ ব্লকে JSON এরর রেসপন্স ফিক্স করা হয়েছে যেন ফ্রন্টএন্ডে পড়া যায়
-                return new Response(JSON.stringify({ success: false, error: err.message }), { 
-                    status: 500, 
-                    headers: { ...headers, "Content-Type": "application/json" } 
-                });
+                return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } });
             }
         }
 
-        // ROUTE: GET /api/excel
         if (request.method === "GET" && url.pathname === "/api/excel") {
             try {
                 const { results } = await env.DB.prepare(`SELECT * FROM production ORDER BY print_type ASC, date ASC`).all();
@@ -268,7 +278,6 @@ export default {
             }
         }
 
-        // ROUTE: GET /api/pdf
         if (request.method === "GET" && url.pathname === "/api/pdf") {
             try {
                 const { results } = await env.DB.prepare(`SELECT * FROM production ORDER BY print_type ASC, date ASC`).all();
