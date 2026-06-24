@@ -1,0 +1,11 @@
+name = "zkl-production-report"
+main = "src/index.js"
+compatibility_date = "2023-10-30"
+
+[site]
+bucket = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "zkl-production-db"
+database_id = "YOUR_D1_DATABASE_ID"
