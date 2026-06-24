@@ -1,7 +1,7 @@
 import { generateExcelReport } from './excel.js';
 import { generatePdfReport } from './pdf.js';
 
-// ফ্রন্টএন্ড এইচটিএমএল কোড সরাসরি ওয়ার্কারের ভেতরে ইমবেড করা হলো
+// ফ্রন্টএন্ড এইচটিএমএল কোড ডাইনামিক ডাটালিস্ট ও এরর ট্র্যাকিং সহ
 const HTML_CONTENT = `
 <!DOCTYPE html>
 <html lang="en">
@@ -20,8 +20,8 @@ const HTML_CONTENT = `
         .menu-btn { background: white; border: 2px solid var(--primary); color: var(--primary); padding: 30px 20px; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: 600; transition: all 0.2s ease; text-align: center; }
         .menu-btn:hover { background: var(--primary); color: white; transform: translateY(-2px); }
         label { display: block; margin-top: 15px; font-weight: 600; font-size: 14px; color: #475569; }
-        input, select { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
-        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30,58,138,0.1); }
+        input { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30,58,138,0.1); }
         .btn-submit { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 25px; }
         .btn-submit:hover { background: var(--primary-hover); }
         .btn-back { background: #64748b; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 15px; cursor: pointer; margin-top: 10px; }
@@ -36,6 +36,7 @@ const HTML_CONTENT = `
 </head>
 <body>
 <div class="container">
+    
     <div id="view-home" class="view active">
         <h2>Zakaria Printing Unit-1 Control Panel</h2>
         <div class="menu-grid">
@@ -43,29 +44,36 @@ const HTML_CONTENT = `
             <div class="menu-btn" onclick="navigate('view-download')">💾<br><br>Download Reports</div>
         </div>
     </div>
+
     <div id="view-update" class="view">
         <h2>Production Entry Form</h2>
         <form id="productionForm">
             <label>Production Date</label>
             <input type="date" id="date" required>
+            
             <label>Buyer Name</label>
-            <input type="text" id="buyer" placeholder="e.g., ABD, FineLook, ZAL" required>
+            <input type="text" id="buyer" list="buyer-suggestions" placeholder="Click to see existing or type to filter..." autocomplete="off" required>
+            <datalist id="buyer-suggestions"></datalist>
+            
             <label>Style No</label>
-            <input type="text" id="style" placeholder="e.g., FAIZA-13" required>
+            <input type="text" id="style" list="style-suggestions" placeholder="Click to see existing or type to filter..." autocomplete="off" required>
+            <datalist id="style-suggestions"></datalist>
+            
             <label>Print Type / Section</label>
-            <select id="print_type" required>
-                <option value="Stone Attached">Stone Attached</option>
-                <option value="Neck Print">Neck Print</option>
-                <option value="Table Print">Table Print</option>
-            </select>
+            <input type="text" id="print_type" list="print-type-suggestions" placeholder="Click to see sections or type to filter..." autocomplete="off" required>
+            <datalist id="print-type-suggestions"></datalist>
+
             <label>CM per Dozen ($)</label>
             <input type="number" id="cm_dzn" step="0.0001" placeholder="e.g., 1.40" required>
+
             <label>Quantity (Pcs)</label>
             <input type="number" id="quantity" placeholder="e.g., 1500" required>
+
             <button type="submit" class="btn-submit">Save Entry to Cloud D1</button>
             <button type="button" onclick="navigate('view-home')" class="btn-back">Cancel & Go Back</button>
         </form>
     </div>
+
     <div id="view-download" class="view">
         <h2>Report Export Engine</h2>
         <div class="download-box">
@@ -85,11 +93,60 @@ const HTML_CONTENT = `
         <button type="button" onclick="navigate('view-home')" class="btn-back">Back to Home</button>
     </div>
 </div>
+
 <script>
     function navigate(viewId) {
         document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
+        if(viewId === 'view-update') {
+            loadDatabaseSuggestions();
+        }
     }
+
+    // ডাটাবেস থেকে বায়ার, স্টাইল এবং প্রিন্ট টাইপ ডাটা এনে লিস্টে সাজানো
+    async function loadDatabaseSuggestions() {
+        try {
+            const res = await fetch('/api/suggestions');
+            const result = await res.json();
+            
+            if (!res.ok) {
+                alert('⚠️ System Alert: Failed to fetch suggestions from DB.\\nReason: ' + (result.error || 'Unknown Cloud Error'));
+                return;
+            }
+
+            // Populate Buyers
+            const buyerList = document.getElementById('buyer-suggestions');
+            buyerList.innerHTML = '';
+            result.buyers.forEach(name => {
+                let opt = document.createElement('option');
+                opt.value = name;
+                buyerList.appendChild(opt);
+            });
+
+            // Populate Styles
+            const styleList = document.getElementById('style-suggestions');
+            styleList.innerHTML = '';
+            result.styles.forEach(styleNo => {
+                let opt = document.createElement('option');
+                opt.value = styleNo;
+                styleList.appendChild(opt);
+            });
+
+            // Populate Print Types
+            const ptList = document.getElementById('print-type-suggestions');
+            ptList.innerHTML = '';
+            result.print_types.forEach(pt => {
+                let opt = document.createElement('option');
+                opt.value = pt;
+                ptList.appendChild(opt);
+            });
+
+        } catch (err) {
+            alert('❌ Network Error: Unable to sync auto-suggestions with D1 Cloud.');
+        }
+    }
+
+    // ডাটা সাবমিশন এবং অ্যাডভান্সড এরর হ্যান্ডলিং অ্যালার্ট
     document.getElementById('productionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = {
@@ -100,19 +157,27 @@ const HTML_CONTENT = `
             cm_dzn: parseFloat(document.getElementById('cm_dzn').value),
             quantity: parseInt(document.getElementById('quantity').value)
         };
+
         try {
             const res = await fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+            
             const result = await res.json();
-            if (result.success) {
-                alert('Success: Data securely saved!');
+            
+            if (res.ok && result.success) {
+                alert('🎉 Success: Data securely saved to D1 SQL Matrix!');
                 document.getElementById('productionForm').reset();
                 navigate('view-home');
-            } else { alert('Database submission failed.'); }
-        } catch (err) { alert('Error communicating with Worker Backend API.'); }
+            } else { 
+                // ডাটাবেসের সুনির্দিষ্ট এরর মেসেজ ইউজারের সামনে পপআপ করবে
+                alert('❌ Database Server Error (Code ' + res.status + '):\\n\\n→ ' + (result.error || 'Submission failed.')); 
+            }
+        } catch (err) { 
+            alert('❌ Critical Network Error: Could not connect to Cloudflare Worker Engine.'); 
+        }
     });
 </script>
 </body>
@@ -133,14 +198,35 @@ export default {
             return new Response(null, { headers });
         }
 
-        // ১. মেইন রুট ইউআরএল হিট করলে সরাসরি এইচটিএমএল রেসপন্স দেওয়া হবে
+        // ROUTE: GET /
         if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
             return new Response(HTML_CONTENT, {
-                headers: {
-                    ...headers,
-                    "Content-Type": "text/html; charset=utf-8"
-                }
+                headers: { ...headers, "Content-Type": "text/html; charset=utf-8" }
             });
+        }
+
+        // NEW ROUTE: GET /api/suggestions (অটো ফিল্টারিং ডাটা প্রোভাইডার)
+        if (request.method === "GET" && url.pathname === "/api/suggestions") {
+            try {
+                const buyersData = await env.DB.prepare(`SELECT DISTINCT buyer FROM production WHERE buyer IS NOT NULL AND buyer != '' ORDER BY buyer ASC`).all();
+                const stylesData = await env.DB.prepare(`SELECT DISTINCT style FROM production WHERE style IS NOT NULL AND style != '' ORDER BY style ASC`).all();
+                const ptData = await env.DB.prepare(`SELECT DISTINCT print_type FROM production WHERE print_type IS NOT NULL AND print_type != '' ORDER BY print_type ASC`).all();
+
+                const buyers = buyersData.results.map(r => r.buyer);
+                const styles = stylesData.results.map(r => r.style);
+                
+                // ডিফল্ট ৩টি ক্যাটাগরি ফিক্সড রাখা হলো, ডাটাবেসে নতুন কিছু যোগ হলে তাও যুক্ত হবে
+                const defaultPt = ['Stone Attached', 'Neck Print', 'Table Print'];
+                const dbPt = ptData.results.map(r => r.print_type);
+                const print_types = Array.from(new Set([...defaultPt, ...dbPt]));
+
+                return new Response(JSON.stringify({ buyers, styles, print_types }), {
+                    headers: { ...headers, "Content-Type": "application/json" }
+                });
+            } catch (err) {
+                // যদি টেবিল তৈরি না করা থাকে তবে তার সুনির্দিষ্ট মেসেজ রিটার্ন করবে
+                return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } });
+            }
         }
 
         // ROUTE: POST /api/save
@@ -157,7 +243,11 @@ export default {
                     headers: { ...headers, "Content-Type": "application/json" } 
                 });
             } catch (err) {
-                return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
+                // ক্যাচ ব্লকে JSON এরর রেসপন্স ফিক্স করা হয়েছে যেন ফ্রন্টএন্ডে পড়া যায়
+                return new Response(JSON.stringify({ success: false, error: err.message }), { 
+                    status: 500, 
+                    headers: { ...headers, "Content-Type": "application/json" } 
+                });
             }
         }
 
@@ -174,7 +264,7 @@ export default {
                     }
                 });
             } catch (err) {
-                return new Response("Excel Generator Error: " + err.message, { status: 500, headers });
+                return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
             }
         }
 
@@ -191,7 +281,7 @@ export default {
                     }
                 });
             } catch (err) {
-                return new Response("PDF Generator Error: " + err.message, { status: 500, headers });
+                return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
             }
         }
 
