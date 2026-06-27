@@ -22,7 +22,7 @@
         .btn-back { background: #64748b; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 15px; cursor: pointer; margin-top: 10px; }
         .btn-back:hover { background: #475569; }
 
-        /* New styles for download selection page */
+        /* Download section styles */
         .report-option {
             display: flex;
             align-items: center;
@@ -89,7 +89,7 @@
         .format-btn.excel:hover {
             background: #059669;
         }
-        /* ✅ PDF বাটন রিমুভ করা হয়েছে */
+        /* ✅ PDF button styles removed */
 
         .date-selector, .month-selector {
             margin-top: 20px;
@@ -104,7 +104,7 @@
             font-weight: 600;
             color: #475569;
         }
-        .date-selector input, .month-selector input, .month-selector select {
+        .date-selector input, .month-selector input {
             width: 100%;
             padding: 10px;
             border: 1px solid #cbd5e1;
@@ -177,7 +177,7 @@
             <div class="download-arrow">→</div>
         </div>
 
-        <!-- Daily Report Selection (Hidden by default) -->
+        <!-- Daily Report Selection -->
         <div id="daily-section" style="display: none;">
             <h2>Daily Report Download</h2>
 
@@ -188,7 +188,7 @@
 
             <div class="format-selector">
                 <div class="format-buttons">
-                    <!-- ✅ শুধু এক্সেল বাটন রাখা হয়েছে -->
+                    <!-- ✅ শুধু এক্সেল বাটন -->
                     <button class="format-btn excel" onclick="downloadDailyReport()">📊 Download Excel</button>
                 </div>
             </div>
@@ -196,7 +196,7 @@
             <button type="button" onclick="backToDownloadOptions()" class="btn-back">Back to Options</button>
         </div>
 
-        <!-- Monthly Report Selection (Hidden by default) -->
+        <!-- Monthly Report Selection -->
         <div id="monthly-section" style="display: none;">
             <h2>Monthly Report Download</h2>
 
@@ -207,15 +207,13 @@
 
             <div class="format-selector">
                 <div class="format-buttons">
-                    <!-- ✅ শুধু এক্সেল বাটন রাখা হয়েছে -->
+                    <!-- ✅ শুধু এক্সেল বাটন -->
                     <button class="format-btn excel" onclick="downloadMonthlyReport()">📊 Download Excel</button>
                 </div>
             </div>
 
             <button type="button" onclick="backToDownloadOptions()" class="btn-back">Back to Options</button>
         </div>
-
-        <button type="button" onclick="navigate('view-home')" class="btn-back" id="back-to-home">Back to Home</button>
     </div>
 </div>
 
@@ -223,7 +221,6 @@
     function navigate(viewId) {
         document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
-
         document.getElementById('daily-section').style.display = 'none';
         document.getElementById('monthly-section').style.display = 'none';
     }
@@ -231,7 +228,6 @@
     function showDailyOptions() {
         document.getElementById('daily-section').style.display = 'block';
         document.getElementById('monthly-section').style.display = 'none';
-
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('daily-date').value = today;
     }
@@ -239,7 +235,6 @@
     function showMonthlyOptions() {
         document.getElementById('monthly-section').style.display = 'block';
         document.getElementById('daily-section').style.display = 'none';
-
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -251,7 +246,7 @@
         document.getElementById('monthly-section').style.display = 'none';
     }
 
-    // ✅ ফাংশন গুলো আপডেট করা হয়েছে - শুধু এক্সেল ডাউনলোড
+    // ✅ শুধু এক্সেল ডাউনলোড ফাংশন
     function downloadDailyReport() {
         const date = document.getElementById('daily-date').value;
         if (!date) {
