@@ -1,7 +1,7 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 // ============================================
-// DAILY PDF REPORT - এক্সেল ফরম্যাটের সাথে মিল রেখে
+// DAILY PDF REPORT - 100% ইউজারের এক্সেল ফরম্যাট অনুযায়ী
 // ============================================
 export async function generateDailyPdfReport(dbRows, date) {
     const pdfDoc = await PDFDocument.create();
@@ -11,21 +11,21 @@ export async function generateDailyPdfReport(dbRows, date) {
     const fontHelvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const fontHelveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // ডেট ফরম্যাট
+    // ডেট ফরম্যাট করুন ইউজারের ফাইল অনুযায়ী
     const dateObj = new Date(date);
-    const formattedDate = dateObj.toLocaleDateString('en-US', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-    });
+    const day = dateObj.getDate();
+    const month = dateObj.toLocaleDateString('en-US', { month: 'long' });
+    const year = dateObj.getFullYear();
+    const formattedDate = `${month} ${day}, ${year}`;
 
-    // টাইটেল
+    // টাইটেল - ইউজারের ফাইল অনুযায়ী
     page.drawText(`Production Report Of ${formattedDate}`, {
         x: 50, y: height - 40, size: 14,
         font: fontHelveticaBold, color: rgb(0, 0, 0)
     });
 
-    page.drawText('Zakaria Knitwear Limited', {
+    // কোম্পানি নাম - ইউজারের রিকোয়েস্ট অনুযায়ী
+    page.drawText('Zakaria Knitwear Ltd (Printing)', {
         x: 50, y: height - 60, size: 12,
         font: fontHelveticaBold, color: rgb(0, 0, 0)
     });
@@ -53,7 +53,7 @@ export async function generateDailyPdfReport(dbRows, date) {
         color: rgb(0.9, 0.9, 0.9)
     });
 
-    // হেডার টেক্সট
+    // হেডার টেক্সট - ইউজারের ফাইলের মতো
     page.drawText('Serial No', { x: startX + 5, y: startY - 14, size: 9, font: fontHelveticaBold, color: rgb(0, 0, 0) });
     page.drawText('Buyer', { x: startX + colWidths.sl + 5, y: startY - 14, size: 9, font: fontHelveticaBold, color: rgb(0, 0, 0) });
     page.drawText('Style', { x: startX + colWidths.sl + colWidths.buyer + 5, y: startY - 14, size: 9, font: fontHelveticaBold, color: rgb(0, 0, 0) });
@@ -64,7 +64,7 @@ export async function generateDailyPdfReport(dbRows, date) {
 
     startY -= 20;
 
-    // ডাটা রো
+    // ডাটা রো যোগ করা
     let sl = 1;
     let totalQty = 0;
     let totalCm = 0;
@@ -79,14 +79,25 @@ export async function generateDailyPdfReport(dbRows, date) {
             });
         }
 
-        // ডাটা
+        // সিরিয়াল নং
         page.drawText(sl.toString(), { x: startX + 5, y: startY - 14, size: 8, font: fontHelvetica });
+
+        // Buyer
         page.drawText(row.buyer.substring(0, 15), { x: startX + colWidths.sl + 5, y: startY - 14, size: 8, font: fontHelvetica });
+
+        // Style
         page.drawText(row.style.substring(0, 15), { x: startX + colWidths.sl + colWidths.buyer + 5, y: startY - 14, size: 8, font: fontHelvetica });
+
+        // Print Type
         page.drawText(row.print_type.substring(0, 15), { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + 5, y: startY - 14, size: 8, font: fontHelvetica });
+
+        // Production Qty
         page.drawText(row.quantity.toString(), { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + colWidths.printType + 10, y: startY - 14, size: 8, font: fontHelvetica });
+
+        // CM Per Dozen
         page.drawText(`$${row.cm_dzn.toFixed(2)}`, { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + colWidths.printType + colWidths.qty + 5, y: startY - 14, size: 8, font: fontHelvetica });
 
+        // Total CM (ক্যালকুলেটেড)
         const rowTotalCm = (row.quantity / 12) * row.cm_dzn;
         page.drawText(`$${rowTotalCm.toFixed(2)}`, { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + colWidths.printType + colWidths.qty + colWidths.cmDzn + 5, y: startY - 14, size: 8, font: fontHelvetica });
 
@@ -124,7 +135,7 @@ export async function generateDailyPdfReport(dbRows, date) {
 }
 
 // ============================================
-// MONTHLY PDF REPORT - এক্সেল ফরম্যাটের সাথে মিল রেখে
+// MONTHLY PDF REPORT - 100% ইউজারের এক্সেল ফরম্যাট অনুযায়ী
 // ============================================
 export async function generateMonthlyPdfReport(dbRows, month) {
     const pdfDoc = await PDFDocument.create();
@@ -140,13 +151,14 @@ export async function generateMonthlyPdfReport(dbRows, month) {
     const monthName = monthObj.toLocaleDateString('en-US', { month: 'long' });
     const reportTitle = `${monthName} ${year}`;
 
-    // টাইটেল
+    // টাইটেল - ইউজারের ফাইল অনুযায়ী
     page.drawText(`Production Report Of ${reportTitle}`, {
         x: 50, y: height - 40, size: 14,
         font: fontHelveticaBold, color: rgb(0, 0, 0)
     });
 
-    page.drawText('Zakaria Knitwear Limited', {
+    // কোম্পানি নাম - ইউজারের রিকোয়েস্ট অনুযায়ী
+    page.drawText('Zakaria Knitwear Ltd (Printing)', {
         x: 50, y: height - 60, size: 12,
         font: fontHelveticaBold, color: rgb(0, 0, 0)
     });
@@ -168,41 +180,42 @@ export async function generateMonthlyPdfReport(dbRows, month) {
                        colWidths.printType + colWidths.cmDzn +
                        (31 * colWidths.day) + colWidths.prevQty + colWidths.currQty + colWidths.totalCm;
 
-    // হেডার ব্যাকগ্রাউন্ড
+    // হেডার ব্যাকগ্রাউন্ড - ইউজারের ফাইলের মতো ডার্ক ব্লু
     page.drawRectangle({
         x: startX, y: startY - 20,
         width: headerWidth, height: 20,
         color: rgb(0.2, 0.28, 0.37)
     });
 
-    // হেডার টেক্সট
-    page.drawText('SL', { x: startX + 5, y: startY - 14, size: 9, font: fontHelveticaBold, color: rgb(1,1,1) });
-    page.drawText('Buyer', { x: startX + colWidths.sl + 10, y: startY - 14, size: 9, font: fontHelveticaBold, color: rgb(1,1,1) });
-    page.drawText('Style', { x: startX + colWidths.sl + colWidths.buyer + 10, y: startY - 14, size: 9, font: fontHelveticaBold, color: rgb(1,1,1) });
-    page.drawText('Print Type', { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1,1,1) });
-    page.drawText('CM/Doz ($)', { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + colWidths.printType + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1,1,1) });
+    // হেডার টেক্সট - সাদা রং
+    page.drawText('SL', { x: startX + 5, y: startY - 14, size: 9, font: fontHelveticaBold, color: rgb(1, 1, 1) });
+    page.drawText('Buyer', { x: startX + colWidths.sl + 10, y: startY - 14, size: 9, font: fontHelveticaBold, color: rgb(1, 1, 1) });
+    page.drawText('Style', { x: startX + colWidths.sl + colWidths.buyer + 10, y: startY - 14, size: 9, font: fontHelveticaBold, color: rgb(1, 1, 1) });
+    page.drawText('Print Type', { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1, 1, 1) });
+    page.drawText('CM/Doz ($)', { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + colWidths.printType + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1, 1, 1) });
 
-    // তারিখ হেডার
+    // তারিখ হেডার (1-31)
     let currentDaysX = startX + colWidths.sl + colWidths.buyer + colWidths.style + colWidths.printType + colWidths.cmDzn;
     for (let d = 1; d <= 31; d++) {
-        page.drawText(d.toString(), { x: currentDaysX + 2, y: startY - 14, size: 7, font: fontHelveticaBold, color: rgb(1,1,1) });
+        page.drawText(d.toString(), { x: currentDaysX + 2, y: startY - 14, size: 7, font: fontHelveticaBold, color: rgb(1, 1, 1) });
         currentDaysX += colWidths.day;
     }
 
-    page.drawText('Prev. Qty', { x: currentDaysX + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1,1,1) });
-    page.drawText('Curr. M Qty', { x: currentDaysX + colWidths.prevQty + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1,1,1) });
-    page.drawText('Total CM', { x: currentDaysX + colWidths.prevQty + colWidths.currQty + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1,1,1) });
+    // অতিরিক্ত হেডার
+    page.drawText('Prev. Qty', { x: currentDaysX + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1, 1, 1) });
+    page.drawText('Curr. M Qty', { x: currentDaysX + colWidths.prevQty + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1, 1, 1) });
+    page.drawText('Total CM', { x: currentDaysX + colWidths.prevQty + colWidths.currQty + 5, y: startY - 14, size: 8, font: fontHelveticaBold, color: rgb(1, 1, 1) });
 
     startY -= 20;
 
-    // সেকশন অনুযায়ী ডাটা গ্রুপ
+    // সেকশন অনুযায়ী ডাটা গ্রুপ করা
     const sections = ['Stone Attached', 'Neck Print', 'Table Print'];
 
     sections.forEach(sectionName => {
         const sectionRows = dbRows.filter(r => r.print_type === sectionName);
         if (sectionRows.length === 0) return;
 
-        // সেকশন হেডার
+        // সেকশন হেডার - ইউজারের ফাইলের মতো লাইট গ্রে
         page.drawRectangle({
             x: startX, y: startY - 18,
             width: headerWidth, height: 18,
@@ -214,7 +227,7 @@ export async function generateMonthlyPdfReport(dbRows, month) {
         });
         startY -= 18;
 
-        // ডাটা গ্রুপ
+        // ডাটা গ্রুপ করা
         const matrixMap = {};
         sectionRows.forEach(item => {
             const key = `${item.buyer}|||${item.style}`;
@@ -246,13 +259,22 @@ export async function generateMonthlyPdfReport(dbRows, month) {
                 });
             }
 
-            // ডাটা
+            // সিরিয়াল নং
             page.drawText((sl++).toString(), { x: startX + 5, y: startY - 12, size: 8, font: fontHelvetica });
+
+            // Buyer
             page.drawText(row.buyer.substring(0, 12), { x: startX + colWidths.sl + 5, y: startY - 12, size: 8, font: fontHelvetica });
+
+            // Style
             page.drawText(row.style.substring(0, 14), { x: startX + colWidths.sl + colWidths.buyer + 5, y: startY - 12, size: 8, font: fontHelvetica });
+
+            // Print Type
             page.drawText(row.print_type.substring(0, 12), { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + 5, y: startY - 12, size: 7, font: fontHelvetica });
+
+            // CM/Doz
             page.drawText(`$${row.cm_dzn.toFixed(2)}`, { x: startX + colWidths.sl + colWidths.buyer + colWidths.style + colWidths.printType + 5, y: startY - 12, size: 7, font: fontHelvetica });
 
+            // তারিখ কলাম (1-31)
             let dx = startX + colWidths.sl + colWidths.buyer + colWidths.style + colWidths.printType + colWidths.cmDzn;
             for (let d = 1; d <= 31; d++) {
                 if (row.days[d] > 0) {
@@ -261,8 +283,11 @@ export async function generateMonthlyPdfReport(dbRows, month) {
                 dx += colWidths.day;
             }
 
-            const totalCM = (row.cm_dzn / 12) * row.rowTotalPcs;
+            // Curr. M Qty (সামারি)
             page.drawText(row.rowTotalPcs.toString(), { x: dx + 5, y: startY - 12, size: 8, font: fontHelvetica });
+
+            // Total CM (ক্যালকুলেটেড)
+            const totalCM = (row.cm_dzn / 12) * row.rowTotalPcs;
             page.drawText(`$${totalCM.toFixed(2)}`, { x: dx + colWidths.prevQty + colWidths.currQty + 5, y: startY - 12, size: 8, font: fontHelvetica });
 
             // বর্ডার লাইন
@@ -274,7 +299,7 @@ export async function generateMonthlyPdfReport(dbRows, month) {
 
             startY -= 16;
         });
-        startY -= 10;
+        startY -= 10; // সেকশনের মধ্যে স্পেস
     });
 
     return await pdfDoc.save();
