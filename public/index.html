@@ -89,13 +89,7 @@
         .format-btn.excel:hover {
             background: #059669;
         }
-        .format-btn.pdf {
-            background: #ef4444;
-            color: white;
-        }
-        .format-btn.pdf:hover {
-            background: #dc2626;
-        }
+        /* ✅ PDF বাটন রিমুভ করা হয়েছে */
 
         .date-selector, .month-selector {
             margin-top: 20px;
@@ -194,8 +188,8 @@
 
             <div class="format-selector">
                 <div class="format-buttons">
-                    <button class="format-btn excel" onclick="downloadDailyReport('excel')">📊 Download Excel</button>
-                    <button class="format-btn pdf" onclick="downloadDailyReport('pdf')">📄 Download PDF</button>
+                    <!-- ✅ শুধু এক্সেল বাটন রাখা হয়েছে -->
+                    <button class="format-btn excel" onclick="downloadDailyReport()">📊 Download Excel</button>
                 </div>
             </div>
 
@@ -213,8 +207,8 @@
 
             <div class="format-selector">
                 <div class="format-buttons">
-                    <button class="format-btn excel" onclick="downloadMonthlyReport('excel')">📊 Download Excel</button>
-                    <button class="format-btn pdf" onclick="downloadMonthlyReport('pdf')">📄 Download PDF</button>
+                    <!-- ✅ শুধু এক্সেল বাটন রাখা হয়েছে -->
+                    <button class="format-btn excel" onclick="downloadMonthlyReport()">📊 Download Excel</button>
                 </div>
             </div>
 
@@ -257,32 +251,23 @@
         document.getElementById('monthly-section').style.display = 'none';
     }
 
-    function downloadDailyReport(format) {
+    // ✅ ফাংশন গুলো আপডেট করা হয়েছে - শুধু এক্সেল ডাউনলোড
+    function downloadDailyReport() {
         const date = document.getElementById('daily-date').value;
         if (!date) {
             alert('Please select a date');
             return;
         }
-
-        if (format === 'excel') {
-            window.location.href = `/api/daily-excel?date=${date}`;
-        } else if (format === 'pdf') {
-            window.location.href = `/api/daily-pdf?date=${date}`;
-        }
+        window.location.href = `/api/daily-excel?date=${date}`;
     }
 
-    function downloadMonthlyReport(format) {
+    function downloadMonthlyReport() {
         const monthYear = document.getElementById('month-year').value;
         if (!monthYear) {
             alert('Please select a month');
             return;
         }
-
-        if (format === 'excel') {
-            window.location.href = `/api/monthly-excel?month=${monthYear}`;
-        } else if (format === 'pdf') {
-            window.location.href = `/api/monthly-pdf?month=${monthYear}`;
-        }
+        window.location.href = `/api/monthly-excel?month=${monthYear}`;
     }
 
     document.getElementById('productionForm').addEventListener('submit', async (e) => {
