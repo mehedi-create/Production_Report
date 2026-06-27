@@ -1,219 +1,320 @@
 import ExcelJS from 'exceljs';
 
 // ============================================
-// DAILY REPORT - 100% ইউজারের ফরম্যাট অনুযায়ী
+// HELPER FUNCTIONS - আপনার কোড থেকে নেওয়া
+// ============================================
+const thin = { style: 'thin' };
+
+function allThinBorder() {
+    return { top: thin, bottom: thin, left: thin, right: thin };
+}
+
+function font(bold, size, color, italic = false) {
+    return { bold, italic, size, color: { argb: color }, name: 'Calibri' };
+}
+
+function fill(argb) {
+    return { type: 'pattern', pattern: 'solid', fgColor: { argb } };
+}
+
+function align(horizontal, vertical, wrapText = false) {
+    return { horizontal, vertical, wrapText };
+}
+
+// ============================================
+// DAILY REPORT - 100% আপনার ফরম্যাট অনুযায়ী
 // ============================================
 export async function generateDailyExcelReport(results, date) {
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet('Production Report');
+    const ws = workbook.addWorksheet('Production Report');
+
+    // কলাম উইডথ (আপনার কোড থেকে)
+    ws.getColumn(1).width = 13.85546875; // A - Serial No
+    ws.getColumn(2).width = 14;          // B - Buyer
+    ws.getColumn(3).width = 14;          // C - Style
+    ws.getColumn(4).width = 14;          // D - Print Type
+    ws.getColumn(5).width = 16;          // E - Production Qty
+    ws.getColumn(6).width = 16;          // F - CM Per Dozen
+    ws.getColumn(7).width = 14;          // G - Total CM
+
+    // রো হাইট (আপনার কোড থেকে)
+    ws.getRow(1).height = 21;
+    ws.getRow(7).height = 33;
+    ws.getRow(8).height = 22.5;
+    ws.getRow(9).height = 22.5;
+    ws.getRow(10).height = 22.5;
+    ws.getRow(11).height = 22.5;
+    ws.getRow(12).height = 22.5;
+    ws.getRow(13).height = 22.5;
 
     // ডেট ফরম্যাট
     const dateObj = new Date(date);
     const day = dateObj.getDate();
     const month = dateObj.toLocaleDateString('en-US', { month: 'long' });
     const year = dateObj.getFullYear();
-    const formattedDate = `${month} ${day}, ${year}`;
-
-    // স্টাইল সেটআপ
-    const centerAlign = { vertical: 'middle', horizontal: 'center' };
-    const leftAlign = { vertical: 'middle', horizontal: 'left' };
-    const rightAlign = { vertical: 'middle', horizontal: 'right' };
-    const borderStyle = {
-        top: { style: 'thin' }, left: { style: 'thin' },
-        bottom: { style: 'thin' }, right: { style: 'thin' }
-    };
-    const boldFont = { name: 'Arial', size: 10, bold: true };
-    const titleFont = { name: 'Arial', size: 14, bold: true };
+    const formattedDate = `[Specify Date]`; // আপনার ফাইল অনুযায়ী
 
     // Row 1: Title
-    sheet.mergeCells('A1:G1');
-    sheet.getCell('A1').value = `Production Report Of ${formattedDate}`;
-    sheet.getCell('A1').font = titleFont;
-    sheet.getCell('A1').alignment = leftAlign;
+    ws.getRow(1).getCell(1).value = `Production Report Of ${formattedDate}`;
+    ws.getRow(1).getCell(1).font = font(true, 16, 'FF1F4E78');
 
-    // Row 3: Company
-    sheet.mergeCells('A3:G3');
-    sheet.getCell('A3').value = 'Zakaria Knitwear Ltd (Printing)';
-    sheet.getCell('A3').font = boldFont;
-    sheet.getCell('A3').alignment = leftAlign;
+    // Row 3: Company (আপনার রিকোয়েস্ট অনুযায়ী)
+    ws.getRow(3).getCell(1).value = 'Zakaria Knitwear Limited (Printing)';
+    ws.getRow(3).getCell(1).font = font(true, 12, 'FF333333');
 
     // Row 4: Address
-    sheet.mergeCells('A4:G4');
-    sheet.getCell('A4').value = 'Porabari, Ghatail, Tangail';
-    sheet.getCell('A4').font = boldFont;
-    sheet.getCell('A4').alignment = leftAlign;
+    ws.getRow(4).getCell(1).value = 'Porabari, Ghatail, Tangail';
+    ws.getRow(4).getCell(1).font = font(false, 10, 'FF595959', true);
 
     // Row 7: Headers
     const headers = [
         'Serial No', 'Buyer', 'Style', 'Print Type',
         'Production Qty (Pcs)', 'CM Per Dozen ($)', 'Total CM ($)'
     ];
+    const headerBg = 'FF2F5597';
 
-    headers.forEach((header, index) => {
-        const cell = sheet.getCell(7, index + 1);
-        cell.value = header;
-        cell.font = boldFont;
-        cell.alignment = centerAlign;
-        cell.border = borderStyle;
-    });
+    const r7 = ws.getRow(7);
+    for (let i = 0; i < headers.length; i++) {
+        const cell = r7.getCell(i + 1);
+        cell.value = headers[i];
+        cell.font = font(true, 11, 'FFFFFFFF');
+        cell.fill = fill(headerBg);
+        cell.alignment = align('center', 'center', true);
+        cell.border = allThinBorder();
+    }
 
-    // ডাটা রো যোগ করা
+    // ডাটা রো যোগ করা (রো 8 থেকে)
     let currentRow = 8;
     let serialNo = 1;
 
-    results.forEach(row => {
+    results.forEach((row, index) => {
+        const isEven = (index % 2 === 1);
+        const rowFill = isEven ? fill('FFF2F5F9') : null;
+        const wsRow = ws.getRow(currentRow);
+
         // Serial No
-        sheet.getCell(currentRow, 1).value = serialNo++;
-        sheet.getCell(currentRow, 1).alignment = centerAlign;
-        sheet.getCell(currentRow, 1).border = borderStyle;
+        const cell1 = wsRow.getCell(1);
+        cell1.value = serialNo++;
+        cell1.font = font(false, 11, 'FF000000');
+        cell1.alignment = align('center', 'center');
+        cell1.border = allThinBorder();
+        if (rowFill) cell1.fill = rowFill;
 
         // Buyer
-        sheet.getCell(currentRow, 2).value = row.buyer;
-        sheet.getCell(currentRow, 2).alignment = leftAlign;
-        sheet.getCell(currentRow, 2).border = borderStyle;
+        const cell2 = wsRow.getCell(2);
+        cell2.value = row.buyer;
+        cell2.font = font(false, 11, 'FF000000');
+        cell2.alignment = align('left', 'center');
+        cell2.border = allThinBorder();
+        if (rowFill) cell2.fill = rowFill;
 
         // Style
-        sheet.getCell(currentRow, 3).value = row.style;
-        sheet.getCell(currentRow, 3).alignment = leftAlign;
-        sheet.getCell(currentRow, 3).border = borderStyle;
+        const cell3 = wsRow.getCell(3);
+        cell3.value = row.style;
+        cell3.font = font(false, 11, 'FF000000');
+        cell3.alignment = align('left', 'center');
+        cell3.border = allThinBorder();
+        if (rowFill) cell3.fill = rowFill;
 
         // Print Type
-        sheet.getCell(currentRow, 4).value = row.print_type;
-        sheet.getCell(currentRow, 4).alignment = leftAlign;
-        sheet.getCell(currentRow, 4).border = borderStyle;
+        const cell4 = wsRow.getCell(4);
+        cell4.value = row.print_type;
+        cell4.font = font(false, 11, 'FF000000');
+        cell4.alignment = align('center', 'center');
+        cell4.border = allThinBorder();
+        if (rowFill) cell4.fill = rowFill;
 
         // Production Qty
-        sheet.getCell(currentRow, 5).value = row.quantity;
-        sheet.getCell(currentRow, 5).alignment = centerAlign;
-        sheet.getCell(currentRow, 5).border = borderStyle;
+        const cell5 = wsRow.getCell(5);
+        cell5.value = row.quantity;
+        cell5.font = font(false, 11, 'FF000000');
+        cell5.alignment = align('right', 'center');
+        cell5.border = allThinBorder();
+        if (rowFill) cell5.fill = rowFill;
 
         // CM Per Dozen
-        sheet.getCell(currentRow, 6).value = row.cm_dzn;
-        sheet.getCell(currentRow, 6).alignment = centerAlign;
-        sheet.getCell(currentRow, 6).border = borderStyle;
+        const cell6 = wsRow.getCell(6);
+        cell6.value = row.cm_dzn;
+        cell6.font = font(false, 11, 'FF000000');
+        cell6.alignment = align('right', 'center');
+        cell6.border = allThinBorder();
+        if (rowFill) cell6.fill = rowFill;
 
-        // Total CM - ফর্মুলা: (E8/12)*F8
-        sheet.getCell(currentRow, 7).value = { formula: `(E${currentRow}/12)*F${currentRow}` };
-        sheet.getCell(currentRow, 7).alignment = centerAlign;
-        sheet.getCell(currentRow, 7).border = borderStyle;
+        // Total CM - ফর্মুলা (আপনার কোড থেকে)
+        const cell7 = wsRow.getCell(7);
+        cell7.value = { formula: `(E${currentRow}/12)*F${currentRow}` };
+        cell7.font = font(false, 11, 'FF000000');
+        cell7.alignment = align('right', 'center');
+        cell7.border = allThinBorder();
+        if (rowFill) cell7.fill = rowFill;
 
         currentRow++;
     });
 
-    // টোটাল রো
-    const totalRow = currentRow;
-    sheet.mergeCells(`A${totalRow}:D${totalRow}`);
-    sheet.getCell(`A${totalRow}`).value = 'Total';
-    sheet.getCell(`A${totalRow}`).font = boldFont;
-    sheet.getCell(`A${totalRow}`).alignment = centerAlign;
-    sheet.getCell(`A${totalRow}`).border = borderStyle;
-
-    // Total Production Qty
+    // টোটাল রো (রো 13)
     if (currentRow > 8) {
-        sheet.getCell(totalRow, 5).value = { formula: `SUM(E8:E${currentRow - 1})` };
-        sheet.getCell(totalRow, 5).font = boldFont;
-        sheet.getCell(totalRow, 5).alignment = centerAlign;
-        sheet.getCell(totalRow, 5).border = borderStyle;
-    }
+        const totalRow = currentRow;
+        ws.mergeCells(`A${totalRow}:D${totalRow}`);
 
-    // Total CM
-    if (currentRow > 8) {
-        sheet.getCell(totalRow, 7).value = { formula: `SUM(G8:G${currentRow - 1})` };
-        sheet.getCell(totalRow, 7).font = boldFont;
-        sheet.getCell(totalRow, 7).alignment = centerAlign;
-        sheet.getCell(totalRow, 7).border = borderStyle;
-    }
+        const a13 = ws.getCell(`A${totalRow}`);
+        a13.value = 'Total';
+        a13.font = font(true, 11, 'FF000000');
+        a13.fill = fill('FFE9EEF4');
+        a13.alignment = align('left', 'center');
+        a13.border = allThinBorder();
 
-    // কলাম উইডথ সেট (ইউজারের ফাইলের মতো)
-    sheet.getColumn(1).width = 12;  // Serial No
-    sheet.getColumn(2).width = 20;  // Buyer
-    sheet.getColumn(3).width = 20;  // Style
-    sheet.getColumn(4).width = 20;  // Print Type
-    sheet.getColumn(5).width = 22;  // Production Qty
-    sheet.getColumn(6).width = 20;  // CM Per Dozen
-    sheet.getColumn(7).width = 18;  // Total CM
+        // B13, C13, D13 (merged, need border)
+        for (let col = 2; col <= 4; col++) {
+            const cell = ws.getRow(totalRow).getCell(col);
+            cell.fill = fill('FFE9EEF4');
+            cell.border = allThinBorder();
+        }
+
+        // E13: SUM of qty
+        const e13 = ws.getRow(totalRow).getCell(5);
+        e13.value = { formula: `SUM(E8:E${totalRow - 1})` };
+        e13.font = font(true, 11, 'FF000000');
+        e13.fill = fill('FFE9EEF4');
+        e13.alignment = align('right', 'center');
+        e13.border = allThinBorder();
+
+        // F13: empty
+        const f13 = ws.getRow(totalRow).getCell(6);
+        f13.fill = fill('FFE9EEF4');
+        f13.border = allThinBorder();
+
+        // G13: SUM of total CM
+        const g13 = ws.getRow(totalRow).getCell(7);
+        g13.value = { formula: `SUM(G8:G${totalRow - 1})` };
+        g13.font = font(true, 11, 'FF000000');
+        g13.fill = fill('FFE9EEF4');
+        g13.alignment = align('right', 'center');
+        g13.border = allThinBorder();
+    }
 
     const buffer = await workbook.xlsx.writeBuffer();
     return buffer;
 }
 
 // ============================================
-// MONTHLY REPORT - 100% ইউজারের ফরম্যাট অনুযায়ী
+// MONTHLY REPORT - 100% আপনার ফরম্যাট অনুযায়ী
 // ============================================
 export async function generateMonthlyExcelReport(results, month) {
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet('Monthly Production Matrix');
+    const ws = workbook.addWorksheet('Monthly Production Matrix');
 
-    // মাস এবং সাল পার্স
+    // কলাম উইডথ (আপনার কোড থেকে)
+    const colWidths = {
+        1: 3.765625,    // A - SL
+        2: 6.05078125,  // B - Buyer
+        3: 12.10546875, // C - Style
+        4: 13.31640625, // D - Print Type
+        5: 7.26171875,  // E - CM/Doz
+        37: 9.55078125, // AK - Prev. Qty
+        38: 8.875,      // AL - Curr. M Qty
+        39: 8.47265625, // AM - Total CM
+    };
+
+    // ডিফল্ট উইডথ
+    for (let c = 1; c <= 39; c++) {
+        ws.getColumn(c).width = colWidths[c] || 8;
+    }
+
+    // রো হাইট (আপনার কোড থেকে)
+    const rowHeights = {
+        1: 21,
+        6: 35.25,
+    };
+    for (let r = 7; r <= 23; r++) rowHeights[r] = 26.25;
+    for (const [r, h] of Object.entries(rowHeights)) {
+        ws.getRow(Number(r)).height = h;
+    }
+
+    // মাস ফরম্যাট
     const monthObj = new Date(month);
     const year = monthObj.getFullYear();
     const monthName = monthObj.toLocaleDateString('en-US', { month: 'long' });
     const reportTitle = `${monthName} ${year}`;
 
-    // স্টাইল সেটআপ
-    const centerAlign = { vertical: 'middle', horizontal: 'center' };
-    const leftAlign = { vertical: 'middle', horizontal: 'left' };
-    const rightAlign = { vertical: 'middle', horizontal: 'right' };
-    const borderStyle = {
-        top: { style: 'thin' }, left: { style: 'thin' },
-        bottom: { style: 'thin' }, right: { style: 'thin' }
-    };
-    const boldFont = { name: 'Arial', size: 10, bold: true };
-    const titleFont = { name: 'Arial', size: 14, bold: true };
-    const headerFont = { name: 'Arial', size: 9, bold: true };
-
     // Row 1: Title
-    sheet.mergeCells('A1:AK1');
-    sheet.getCell('A1').value = `Production Report Of ${reportTitle}`;
-    sheet.getCell('A1').font = titleFont;
-    sheet.getCell('A1').alignment = leftAlign;
+    const r1 = ws.getRow(1);
+    r1.getCell(1).value = `Production Report Of ${reportTitle}`;
+    r1.getCell(1).font = font(true, 16, 'FF1F4E78');
 
-    // Row 3: Company
-    sheet.mergeCells('A3:AK3');
-    sheet.getCell('A3').value = 'Zakaria Knitwear Ltd (Printing)';
-    sheet.getCell('A3').font = boldFont;
-    sheet.getCell('A3').alignment = leftAlign;
+    // Row 3: Company (আপনার রিকোয়েস্ট অনুযায়ী)
+    const r3 = ws.getRow(3);
+    r3.getCell(1).value = 'Zakaria Knitwear Limited (Printing)';
+    r3.getCell(1).font = font(true, 12, 'FF333333');
 
     // Row 4: Address
-    sheet.mergeCells('A4:AK4');
-    sheet.getCell('A4').value = 'Porabari, Ghatail, Tangail';
-    sheet.getCell('A4').font = boldFont;
-    sheet.getCell('A4').alignment = leftAlign;
+    const r4 = ws.getRow(4);
+    r4.getCell(1).value = 'Porabari, Ghatail, Tangail';
+    r4.getCell(1).font = font(false, 10, 'FF595959', true);
 
-    // Row 7: Headers
-    const mainHeaders = ['SL', 'Buyer', 'Style', 'Print Type', 'CM/Doz ($)'];
-    mainHeaders.forEach((header, index) => {
-        const cell = sheet.getCell(7, index + 1);
-        cell.value = header;
-        cell.font = headerFont;
-        cell.alignment = centerAlign;
-        cell.border = borderStyle;
-    });
+    // Row 5: "Production Dates" merged header (F5:AJ5)
+    ws.mergeCells('F5:AJ5');
+    const f5 = ws.getCell('F5');
+    f5.value = 'Production Dates (1 to 31)';
+    f5.font = font(true, 10, 'FFFFFFFF');
+    f5.fill = fill('FF2F75B5');
+    f5.alignment = align('center', 'center', true);
+    f5.border = { top: thin, bottom: thin, left: thin, right: thin };
 
-    // তারিখ হেডার (1-31)
-    for (let i = 1; i <= 31; i++) {
-        const cell = sheet.getCell(7, 5 + i);
-        cell.value = i;
-        cell.font = headerFont;
-        cell.alignment = centerAlign;
-        cell.border = borderStyle;
+    // Apply top/bottom border to all cells in merge range
+    for (let c = 7; c <= 36; c++) {
+        const cell = ws.getRow(5).getCell(c);
+        cell.border = { top: thin, bottom: thin };
+    }
+    ws.getRow(5).getCell(36).border = { top: thin, bottom: thin, right: thin };
+
+    // Row 6: Column headers
+    const r6 = ws.getRow(6);
+    const darkBlue = 'FF1F4E78';
+    const medBlue = 'FF2F75B5';
+    const darkNav = 'FF16365C';
+
+    const hdrs6 = [
+        [1, 'SL', darkBlue],
+        [2, 'Buyer', darkBlue],
+        [3, 'Style', darkBlue],
+        [4, 'Print Type', darkBlue],
+        [5, 'CM/Doz ($)', darkBlue],
+    ];
+
+    for (const [col, val, bg] of hdrs6) {
+        const cell = r6.getCell(col);
+        cell.value = val;
+        cell.font = font(true, 10, 'FFFFFFFF');
+        cell.fill = fill(bg);
+        cell.alignment = align('center', 'center', true);
+        cell.border = allThinBorder();
     }
 
-    // অতিরিক্ত হেডার
-    sheet.getCell(7, 37).value = 'Prev. Qty\n(Pcs)';
-    sheet.getCell(7, 37).font = headerFont;
-    sheet.getCell(7, 37).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-    sheet.getCell(7, 37).border = borderStyle;
+    // Date columns 1-31 → cols 6-36
+    for (let d = 1; d <= 31; d++) {
+        const cell = r6.getCell(5 + d);
+        cell.value = d;
+        cell.font = font(true, 10, 'FFFFFFFF');
+        cell.fill = fill(medBlue);
+        cell.alignment = align('center', 'center', true);
+        cell.border = allThinBorder();
+    }
 
-    sheet.getCell(7, 38).value = 'Curr. M Qty\n(Pcs)';
-    sheet.getCell(7, 38).font = headerFont;
-    sheet.getCell(7, 38).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-    sheet.getCell(7, 38).border = borderStyle;
+    // Summary headers AK, AL, AM
+    const summaryHdrs = [
+        [37, 'Prev. Qty\n(Pcs)', darkNav],
+        [38, 'Curr. M Qty\n(Pcs)', darkNav],
+        [39, 'Total CM\n($)', darkNav],
+    ];
 
-    sheet.getCell(7, 39).value = 'Total CM\n($)';
-    sheet.getCell(7, 39).font = headerFont;
-    sheet.getCell(7, 39).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-    sheet.getCell(7, 39).border = borderStyle;
+    for (const [col, val, bg] of summaryHdrs) {
+        const cell = r6.getCell(col);
+        cell.value = val;
+        cell.font = font(true, 10, 'FFFFFFFF');
+        cell.fill = fill(bg);
+        cell.alignment = align('center', 'center', true);
+        cell.border = allThinBorder();
+    }
 
     // ডাটা গ্রুপ করা
     const groups = {};
@@ -236,126 +337,150 @@ export async function generateMonthlyExcelReport(results, month) {
         groups[key].totalQty += row.quantity;
     });
 
-    // ডাটা রো যোগ করা
-    let currentRow = 8;
+    // ডাটা রো যোগ করা (রো 7 থেকে)
+    let currentRow = 7;
     let serialNo = 1;
     const startRow = currentRow;
 
     for (const key in groups) {
         const data = groups[key];
+        const isEven = (serialNo % 2 === 0);
+        const rowFill = isEven ? fill('FFF2F5F9') : null;
+        const wsRow = ws.getRow(currentRow);
 
         // SL
-        sheet.getCell(currentRow, 1).value = serialNo++;
-        sheet.getCell(currentRow, 1).alignment = centerAlign;
-        sheet.getCell(currentRow, 1).border = borderStyle;
+        const cell1 = wsRow.getCell(1);
+        cell1.value = serialNo++;
+        cell1.font = font(false, 10, 'FF000000');
+        cell1.alignment = align('center', 'center');
+        cell1.border = allThinBorder();
+        if (rowFill) cell1.fill = rowFill;
 
         // Buyer
-        sheet.getCell(currentRow, 2).value = data.buyer;
-        sheet.getCell(currentRow, 2).alignment = leftAlign;
-        sheet.getCell(currentRow, 2).border = borderStyle;
+        const cell2 = wsRow.getCell(2);
+        cell2.value = data.buyer;
+        cell2.font = font(false, 10, 'FF000000');
+        cell2.alignment = align('left', 'center');
+        cell2.border = allThinBorder();
+        if (rowFill) cell2.fill = rowFill;
 
         // Style
-        sheet.getCell(currentRow, 3).value = data.style;
-        sheet.getCell(currentRow, 3).alignment = leftAlign;
-        sheet.getCell(currentRow, 3).border = borderStyle;
+        const cell3 = wsRow.getCell(3);
+        cell3.value = data.style;
+        cell3.font = font(false, 10, 'FF000000');
+        cell3.alignment = align('left', 'center');
+        cell3.border = allThinBorder();
+        if (rowFill) cell3.fill = rowFill;
 
         // Print Type
-        sheet.getCell(currentRow, 4).value = data.print_type;
-        sheet.getCell(currentRow, 4).alignment = leftAlign;
-        sheet.getCell(currentRow, 4).border = borderStyle;
+        const cell4 = wsRow.getCell(4);
+        cell4.value = data.print_type;
+        cell4.font = font(false, 10, 'FF000000');
+        cell4.alignment = align('center', 'center');
+        cell4.border = allThinBorder();
+        if (rowFill) cell4.fill = rowFill;
 
         // CM/Doz
-        sheet.getCell(currentRow, 5).value = data.cm_dzn;
-        sheet.getCell(currentRow, 5).alignment = centerAlign;
-        sheet.getCell(currentRow, 5).border = borderStyle;
+        const cell5 = wsRow.getCell(5);
+        cell5.value = data.cm_dzn;
+        cell5.font = font(false, 10, 'FF000000');
+        cell5.alignment = align('right', 'center');
+        cell5.border = allThinBorder();
+        if (rowFill) cell5.fill = rowFill;
 
-        // তারিখ 1-31
-        for (let i = 1; i <= 31; i++) {
-            const qty = data.days[i];
-            sheet.getCell(currentRow, 5 + i).value = qty > 0 ? qty : null;
-            sheet.getCell(currentRow, 5 + i).alignment = centerAlign;
-            sheet.getCell(currentRow, 5 + i).border = borderStyle;
+        // তারিখ কলাম (1-31)
+        for (let d = 1; d <= 31; d++) {
+            const cell = wsRow.getCell(5 + d);
+            const qty = data.days[d];
+            cell.value = qty > 0 ? qty : null;
+            cell.font = font(false, 10, 'FF000000');
+            cell.alignment = align('center', 'center', true);
+            cell.border = allThinBorder();
+            if (rowFill) cell.fill = rowFill;
         }
 
         // Prev. Qty (খালি)
-        sheet.getCell(currentRow, 37).value = null;
-        sheet.getCell(currentRow, 37).border = borderStyle;
+        const cell37 = wsRow.getCell(37);
+        cell37.value = null;
+        cell37.font = font(false, 10, 'FF000000');
+        cell37.alignment = align('right', 'center');
+        cell37.border = allThinBorder();
+        if (rowFill) cell37.fill = rowFill;
 
-        // Curr. M Qty - SUM ফর্মুলা
-        sheet.getCell(currentRow, 38).value = { formula: `SUM(F${currentRow}:AF${currentRow})` };
-        sheet.getCell(currentRow, 38).alignment = centerAlign;
-        sheet.getCell(currentRow, 38).border = borderStyle;
+        // Curr. M Qty - SUM ফর্মুলা (আপনার কোড থেকে)
+        const cell38 = wsRow.getCell(38);
+        cell38.value = { formula: `SUM(F${currentRow}:AF${currentRow})` };
+        cell38.font = font(false, 10, 'FF000000');
+        cell38.alignment = align('right', 'center');
+        cell38.border = allThinBorder();
+        if (rowFill) cell38.fill = rowFill;
 
-        // Total CM - IF ফর্মুলা (ইউজারের ফাইলের মতো)
-        sheet.getCell(currentRow, 39).value = { formula: `IF(AG${currentRow}>0, (AG${currentRow}/12)*E${currentRow}, \"\")` };
-        sheet.getCell(currentRow, 39).alignment = centerAlign;
-        sheet.getCell(currentRow, 39).border = borderStyle;
+        // Total CM - IF ফর্মুলা (আপনার কোড থেকে)
+        const cell39 = wsRow.getCell(39);
+        cell39.value = { formula: `IF(AL${currentRow}>0,(AL${currentRow}/12)*E${currentRow},"")` };
+        cell39.font = font(false, 10, 'FF000000');
+        cell39.alignment = align('right', 'center');
+        cell39.border = allThinBorder();
+        if (rowFill) cell39.fill = rowFill;
 
         currentRow++;
     }
 
     const endRow = currentRow - 1;
 
-    // টোটাল প্রোডাকশন কোয়ান্টিটি রো
+    // টোটাল প্রোডাকশন কোয়ান্টিটি রো (রো 22)
     if (endRow >= startRow) {
-        sheet.mergeCells(`A${currentRow}:E${currentRow}`);
-        sheet.getCell(currentRow, 1).value = 'Total Production Qty (Pcs)';
-        sheet.getCell(currentRow, 1).font = boldFont;
-        sheet.getCell(currentRow, 1).alignment = rightAlign;
-        sheet.getCell(currentRow, 1).border = borderStyle;
+        ws.mergeCells(`A${currentRow}:E${currentRow}`);
+        const r22a = ws.getCell(`A${currentRow}`);
+        r22a.value = 'Total Production Qty (Pcs)';
+        r22a.font = font(true, 10, 'FF000000');
+        r22a.fill = fill('FFE9EEF4');
+        r22a.alignment = align('left', 'center');
+        r22a.border = allThinBorder();
 
-        // প্রতিটি তারিখ কলামের জন্য SUM
-        for (let i = 1; i <= 31; i++) {
-            const colLetter = sheet.getColumn(5 + i).letter;
-            sheet.getCell(currentRow, 5 + i).value = { formula: `SUM(${colLetter}${startRow}:${colLetter}${endRow})` };
-            sheet.getCell(currentRow, 5 + i).font = boldFont;
-            sheet.getCell(currentRow, 5 + i).alignment = centerAlign;
-            sheet.getCell(currentRow, 5 + i).border = borderStyle;
+        for (let col = 6; col <= 39; col++) {
+            const cell = ws.getRow(currentRow).getCell(col);
+            if (col <= 36) {
+                const colLetter = ws.getColumn(col).letter;
+                cell.value = { formula: `SUM(${colLetter}${startRow}:${colLetter}${endRow})` };
+            } else if (col === 37) {
+                cell.value = { formula: `SUM(AK${startRow}:AK${endRow})` };
+            } else if (col === 38) {
+                cell.value = { formula: `SUM(AL${startRow}:AL${endRow})` };
+            }
+            cell.font = font(true, 10, 'FF000000');
+            cell.fill = fill('FFE9EEF4');
+            cell.alignment = align('right', 'center');
+            cell.border = allThinBorder();
         }
 
         currentRow++;
     }
 
-    // টোটাল CM ভ্যালু রো
+    // টোটাল CM ভ্যালু রো (রো 23)
     if (endRow >= startRow) {
-        sheet.mergeCells(`A${currentRow}:E${currentRow}`);
-        sheet.getCell(currentRow, 1).value = 'Total CM Value ($)';
-        sheet.getCell(currentRow, 1).font = boldFont;
-        sheet.getCell(currentRow, 1).alignment = rightAlign;
-        sheet.getCell(currentRow, 1).border = borderStyle;
+        ws.mergeCells(`A${currentRow}:E${currentRow}`);
+        const r23a = ws.getCell(`A${currentRow}`);
+        r23a.value = 'Total CM Value ($)';
+        r23a.font = font(true, 10, 'FF000000');
+        r23a.fill = fill('FFD9E1F2');
+        r23a.alignment = align('left', 'center');
+        r23a.border = allThinBorder();
 
-        // প্রতিটি তারিখ কলামের জন্য SUMPRODUCT
-        for (let i = 1; i <= 31; i++) {
-            const colLetter = sheet.getColumn(5 + i).letter;
-            sheet.getCell(currentRow, 5 + i).value = {
-                formula: `SUMPRODUCT(${colLetter}${startRow}:${colLetter}${endRow}, $E${startRow}:$E${endRow})/12`
-            };
-            sheet.getCell(currentRow, 5 + i).font = boldFont;
-            sheet.getCell(currentRow, 5 + i).alignment = centerAlign;
-            sheet.getCell(currentRow, 5 + i).border = borderStyle;
+        for (let col = 6; col <= 39; col++) {
+            const cell = ws.getRow(currentRow).getCell(col);
+            if (col >= 6 && col <= 36) {
+                const colLetter = ws.getColumn(col).letter;
+                cell.value = { formula: `SUMPRODUCT(${colLetter}$${startRow}:${colLetter}$${endRow},$E$${startRow}:$E$${endRow})/12` };
+            } else if (col === 39) {
+                cell.value = { formula: `SUM(AM${startRow}:AM${endRow})` };
+            }
+            cell.font = font(true, 10, 'FF000000');
+            cell.fill = fill('FFD9E1F2');
+            cell.alignment = align('right', 'center');
+            cell.border = allThinBorder();
         }
-
-        // টোটাল CM
-        sheet.getCell(currentRow, 39).value = { formula: `SUM(AH${startRow}:AH${endRow})` };
-        sheet.getCell(currentRow, 39).font = boldFont;
-        sheet.getCell(currentRow, 39).alignment = centerAlign;
-        sheet.getCell(currentRow, 39).border = borderStyle;
     }
-
-    // কলাম উইডথ সেট (ইউজারের ফাইলের মতো)
-    sheet.getColumn(1).width = 5;   // SL
-    sheet.getColumn(2).width = 15;  // Buyer
-    sheet.getColumn(3).width = 18;  // Style
-    sheet.getColumn(4).width = 15;  // Print Type
-    sheet.getColumn(5).width = 12;  // CM/Doz
-
-    for (let i = 6; i <= 36; i++) {
-        sheet.getColumn(i).width = 6;   // Dates 1-31
-    }
-
-    sheet.getColumn(37).width = 12;  // Prev. Qty
-    sheet.getColumn(38).width = 12;  // Curr. M Qty
-    sheet.getColumn(39).width = 15;  // Total CM
 
     const buffer = await workbook.xlsx.writeBuffer();
     return buffer;
