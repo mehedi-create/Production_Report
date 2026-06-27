@@ -1,19 +1,18 @@
 import ExcelJS from 'exceljs';
 
 // ============================================
-// DAILY REPORT - ইউজারের ফরম্যাট অনুযায়ী 100%
+// DAILY REPORT - 100% ইউজারের ফরম্যাট অনুযায়ী
 // ============================================
 export async function generateDailyExcelReport(results, date) {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Production Report');
 
-    // ফরম্যাট ডেট
+    // ডেট ফরম্যাট
     const dateObj = new Date(date);
-    const formattedDate = dateObj.toLocaleDateString('en-US', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-    });
+    const day = dateObj.getDate();
+    const month = dateObj.toLocaleDateString('en-US', { month: 'long' });
+    const year = dateObj.getFullYear();
+    const formattedDate = `${month} ${day}, ${year}`;
 
     // স্টাইল সেটআপ
     const centerAlign = { vertical: 'middle', horizontal: 'center' };
@@ -25,7 +24,6 @@ export async function generateDailyExcelReport(results, date) {
     };
     const boldFont = { name: 'Arial', size: 10, bold: true };
     const titleFont = { name: 'Arial', size: 14, bold: true };
-    const headerFont = { name: 'Arial', size: 10, bold: true };
 
     // Row 1: Title
     sheet.mergeCells('A1:G1');
@@ -35,7 +33,7 @@ export async function generateDailyExcelReport(results, date) {
 
     // Row 3: Company
     sheet.mergeCells('A3:G3');
-    sheet.getCell('A3').value = 'Zakaria Knitwear Limited';
+    sheet.getCell('A3').value = 'Zakaria Knitwear Ltd (Printing)';
     sheet.getCell('A3').font = boldFont;
     sheet.getCell('A3').alignment = leftAlign;
 
@@ -54,7 +52,7 @@ export async function generateDailyExcelReport(results, date) {
     headers.forEach((header, index) => {
         const cell = sheet.getCell(7, index + 1);
         cell.value = header;
-        cell.font = headerFont;
+        cell.font = boldFont;
         cell.alignment = centerAlign;
         cell.border = borderStyle;
     });
@@ -94,7 +92,7 @@ export async function generateDailyExcelReport(results, date) {
         sheet.getCell(currentRow, 6).alignment = centerAlign;
         sheet.getCell(currentRow, 6).border = borderStyle;
 
-        // Total CM - ফর্মুলা: (Production Qty / 12) * CM Per Dozen
+        // Total CM - ফর্মুলা: (E8/12)*F8
         sheet.getCell(currentRow, 7).value = { formula: `(E${currentRow}/12)*F${currentRow}` };
         sheet.getCell(currentRow, 7).alignment = centerAlign;
         sheet.getCell(currentRow, 7).border = borderStyle;
@@ -103,27 +101,30 @@ export async function generateDailyExcelReport(results, date) {
     });
 
     // টোটাল রো
+    const totalRow = currentRow;
+    sheet.mergeCells(`A${totalRow}:D${totalRow}`);
+    sheet.getCell(`A${totalRow}`).value = 'Total';
+    sheet.getCell(`A${totalRow}`).font = boldFont;
+    sheet.getCell(`A${totalRow}`).alignment = centerAlign;
+    sheet.getCell(`A${totalRow}`).border = borderStyle;
+
+    // Total Production Qty
     if (currentRow > 8) {
-        sheet.mergeCells(`A${currentRow}:D${currentRow}`);
-        sheet.getCell(`A${currentRow}`).value = 'Total';
-        sheet.getCell(`A${currentRow}`).font = boldFont;
-        sheet.getCell(`A${currentRow}`).alignment = rightAlign;
-        sheet.getCell(`A${currentRow}`).border = borderStyle;
-
-        // Total Production Qty
-        sheet.getCell(currentRow, 5).value = { formula: `SUM(E8:E${currentRow - 1})` };
-        sheet.getCell(currentRow, 5).font = boldFont;
-        sheet.getCell(currentRow, 5).alignment = centerAlign;
-        sheet.getCell(currentRow, 5).border = borderStyle;
-
-        // Total CM
-        sheet.getCell(currentRow, 7).value = { formula: `SUM(G8:G${currentRow - 1})` };
-        sheet.getCell(currentRow, 7).font = boldFont;
-        sheet.getCell(currentRow, 7).alignment = centerAlign;
-        sheet.getCell(currentRow, 7).border = borderStyle;
+        sheet.getCell(totalRow, 5).value = { formula: `SUM(E8:E${currentRow - 1})` };
+        sheet.getCell(totalRow, 5).font = boldFont;
+        sheet.getCell(totalRow, 5).alignment = centerAlign;
+        sheet.getCell(totalRow, 5).border = borderStyle;
     }
 
-    // কলাম উইডথ সেট
+    // Total CM
+    if (currentRow > 8) {
+        sheet.getCell(totalRow, 7).value = { formula: `SUM(G8:G${currentRow - 1})` };
+        sheet.getCell(totalRow, 7).font = boldFont;
+        sheet.getCell(totalRow, 7).alignment = centerAlign;
+        sheet.getCell(totalRow, 7).border = borderStyle;
+    }
+
+    // কলাম উইডথ সেট (ইউজারের ফাইলের মতো)
     sheet.getColumn(1).width = 12;  // Serial No
     sheet.getColumn(2).width = 20;  // Buyer
     sheet.getColumn(3).width = 20;  // Style
@@ -137,7 +138,7 @@ export async function generateDailyExcelReport(results, date) {
 }
 
 // ============================================
-// MONTHLY REPORT - ইউজারের ফরম্যাট অনুযায়ী 100%
+// MONTHLY REPORT - 100% ইউজারের ফরম্যাট অনুযায়ী
 // ============================================
 export async function generateMonthlyExcelReport(results, month) {
     const workbook = new ExcelJS.Workbook();
@@ -169,7 +170,7 @@ export async function generateMonthlyExcelReport(results, month) {
 
     // Row 3: Company
     sheet.mergeCells('A3:AK3');
-    sheet.getCell('A3').value = 'Zakaria Knitwear Limited';
+    sheet.getCell('A3').value = 'Zakaria Knitwear Ltd (Printing)';
     sheet.getCell('A3').font = boldFont;
     sheet.getCell('A3').alignment = leftAlign;
 
@@ -285,7 +286,7 @@ export async function generateMonthlyExcelReport(results, month) {
         sheet.getCell(currentRow, 38).alignment = centerAlign;
         sheet.getCell(currentRow, 38).border = borderStyle;
 
-        // Total CM - IF ফর্মুলা
+        // Total CM - IF ফর্মুলা (ইউজারের ফাইলের মতো)
         sheet.getCell(currentRow, 39).value = { formula: `IF(AG${currentRow}>0, (AG${currentRow}/12)*E${currentRow}, \"\")` };
         sheet.getCell(currentRow, 39).alignment = centerAlign;
         sheet.getCell(currentRow, 39).border = borderStyle;
@@ -295,7 +296,7 @@ export async function generateMonthlyExcelReport(results, month) {
 
     const endRow = currentRow - 1;
 
-    // টোটাল প্রোডাকশন রো
+    // টোটাল প্রোডাকশন কোয়ান্টিটি রো
     if (endRow >= startRow) {
         sheet.mergeCells(`A${currentRow}:E${currentRow}`);
         sheet.getCell(currentRow, 1).value = 'Total Production Qty (Pcs)';
@@ -303,6 +304,7 @@ export async function generateMonthlyExcelReport(results, month) {
         sheet.getCell(currentRow, 1).alignment = rightAlign;
         sheet.getCell(currentRow, 1).border = borderStyle;
 
+        // প্রতিটি তারিখ কলামের জন্য SUM
         for (let i = 1; i <= 31; i++) {
             const colLetter = sheet.getColumn(5 + i).letter;
             sheet.getCell(currentRow, 5 + i).value = { formula: `SUM(${colLetter}${startRow}:${colLetter}${endRow})` };
@@ -322,6 +324,7 @@ export async function generateMonthlyExcelReport(results, month) {
         sheet.getCell(currentRow, 1).alignment = rightAlign;
         sheet.getCell(currentRow, 1).border = borderStyle;
 
+        // প্রতিটি তারিখ কলামের জন্য SUMPRODUCT
         for (let i = 1; i <= 31; i++) {
             const colLetter = sheet.getColumn(5 + i).letter;
             sheet.getCell(currentRow, 5 + i).value = {
@@ -332,13 +335,14 @@ export async function generateMonthlyExcelReport(results, month) {
             sheet.getCell(currentRow, 5 + i).border = borderStyle;
         }
 
+        // টোটাল CM
         sheet.getCell(currentRow, 39).value = { formula: `SUM(AH${startRow}:AH${endRow})` };
         sheet.getCell(currentRow, 39).font = boldFont;
         sheet.getCell(currentRow, 39).alignment = centerAlign;
         sheet.getCell(currentRow, 39).border = borderStyle;
     }
 
-    // কলাম উইডথ সেট
+    // কলাম উইডথ সেট (ইউজারের ফাইলের মতো)
     sheet.getColumn(1).width = 5;   // SL
     sheet.getColumn(2).width = 15;  // Buyer
     sheet.getColumn(3).width = 18;  // Style
