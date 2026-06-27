@@ -1,8 +1,6 @@
 import ExcelJS from 'exceljs';
 
-// ============================================
-// HELPER FUNCTIONS - আপনার কোড থেকে নেওয়া
-// ============================================
+// ====================== HELPER FUNCTIONS ======================
 const thin = { style: 'thin' };
 
 function allThinBorder() {
@@ -21,23 +19,21 @@ function align(horizontal, vertical, wrapText = false) {
     return { horizontal, vertical, wrapText };
 }
 
-// ============================================
-// DAILY REPORT - 100% আপনার ফরম্যাট অনুযায়ী
-// ============================================
+// ====================== DAILY REPORT ======================
 export async function generateDailyExcelReport(results, date) {
     const workbook = new ExcelJS.Workbook();
     const ws = workbook.addWorksheet('Production Report');
 
-    // কলাম উইডথ (আপনার কোড থেকে)
-    ws.getColumn(1).width = 13.85546875; // A - Serial No
-    ws.getColumn(2).width = 14;          // B - Buyer
-    ws.getColumn(3).width = 14;          // C - Style
-    ws.getColumn(4).width = 14;          // D - Print Type
-    ws.getColumn(5).width = 16;          // E - Production Qty (Pcs)
-    ws.getColumn(6).width = 16;          // F - CM Per Dozen ($)
-    ws.getColumn(7).width = 14;          // G - Total CM ($)
+    // কলাম উইডথ (আপনার এক্সেল থেকে)
+    ws.getColumn(1).width = 13.85546875; // A
+    ws.getColumn(2).width = 14;          // B
+    ws.getColumn(3).width = 14;          // C
+    ws.getColumn(4).width = 14;          // D
+    ws.getColumn(5).width = 16;          // E
+    ws.getColumn(6).width = 16;          // F
+    ws.getColumn(7).width = 14;          // G
 
-    // রো হাইট (আপনার কোড থেকে)
+    // রো হাইট
     ws.getRow(1).height = 21;
     ws.getRow(7).height = 33;
     ws.getRow(8).height = 22.5;
@@ -58,7 +54,7 @@ export async function generateDailyExcelReport(results, date) {
     ws.getRow(1).getCell(1).value = `Production Report Of ${formattedDate}`;
     ws.getRow(1).getCell(1).font = font(true, 16, 'FF1F4E78');
 
-    // Row 3: Company (আপনার রিকোয়েস্ট অনুযায়ী)
+    // Row 3: Company
     ws.getRow(3).getCell(1).value = 'Zakaria Knitwear Limited (Printing)';
     ws.getRow(3).getCell(1).font = font(true, 12, 'FF333333');
 
@@ -83,7 +79,7 @@ export async function generateDailyExcelReport(results, date) {
         cell.border = allThinBorder();
     }
 
-    // ডাটা রো যোগ করা (রো 8 থেকে)
+    // ডাটা রো যোগ করা
     let currentRow = 8;
     let serialNo = 1;
 
@@ -134,7 +130,7 @@ export async function generateDailyExcelReport(results, date) {
         wsRow.getCell(6).border = allThinBorder();
         if (rowFill) wsRow.getCell(6).fill = rowFill;
 
-        // Total CM - ফর্মুলা (আপনার কোড থেকে)
+        // Total CM - ফর্মুলা
         wsRow.getCell(7).value = { formula: `(E${currentRow}/12)*F${currentRow}` };
         wsRow.getCell(7).font = font(false, 11, 'FF000000');
         wsRow.getCell(7).alignment = align('right', 'center');
@@ -144,7 +140,7 @@ export async function generateDailyExcelReport(results, date) {
         currentRow++;
     });
 
-    // টোটাল রো (রো 13)
+    // টোটাল রো
     if (currentRow > 8) {
         const totalRow = currentRow;
         ws.mergeCells(`A${totalRow}:D${totalRow}`);
@@ -156,14 +152,12 @@ export async function generateDailyExcelReport(results, date) {
         a13.alignment = align('left', 'center');
         a13.border = allThinBorder();
 
-        // B13, C13, D13 (merged, need border)
         for (let col = 2; col <= 4; col++) {
             const cell = ws.getRow(totalRow).getCell(col);
             cell.fill = fill('FFE9EEF4');
             cell.border = allThinBorder();
         }
 
-        // E13: SUM of qty
         const e13 = ws.getRow(totalRow).getCell(5);
         e13.value = { formula: `SUM(E8:E${totalRow - 1})` };
         e13.font = font(true, 11, 'FF000000');
@@ -171,12 +165,10 @@ export async function generateDailyExcelReport(results, date) {
         e13.alignment = align('right', 'center');
         e13.border = allThinBorder();
 
-        // F13: empty
         const f13 = ws.getRow(totalRow).getCell(6);
         f13.fill = fill('FFE9EEF4');
         f13.border = allThinBorder();
 
-        // G13: SUM of total CM
         const g13 = ws.getRow(totalRow).getCell(7);
         g13.value = { formula: `SUM(G8:G${totalRow - 1})` };
         g13.font = font(true, 11, 'FF000000');
@@ -189,14 +181,12 @@ export async function generateDailyExcelReport(results, date) {
     return buffer;
 }
 
-// ============================================
-// MONTHLY REPORT - 100% আপনার ফরম্যাট অনুযায়ী
-// ============================================
+// ====================== MONTHLY REPORT ======================
 export async function generateMonthlyExcelReport(results, month) {
     const workbook = new ExcelJS.Workbook();
     const ws = workbook.addWorksheet('Monthly Production Matrix');
 
-    // কলাম উইডথ (আপনার কোড থেকে)
+    // কলাম উইডথ
     const colWidths = {
         1: 3.765625,    // A - SL
         2: 6.05078125,  // B - Buyer
@@ -208,16 +198,12 @@ export async function generateMonthlyExcelReport(results, month) {
         39: 8.47265625, // AM - Total CM
     };
 
-    // ডিফল্ট উইডথ
     for (let c = 1; c <= 39; c++) {
         ws.getColumn(c).width = colWidths[c] || 8;
     }
 
-    // রো হাইট (আপনার কোড থেকে)
-    const rowHeights = {
-        1: 21,
-        6: 35.25,
-    };
+    // রো হাইট
+    const rowHeights = { 1: 21, 6: 35.25 };
     for (let r = 7; r <= 23; r++) rowHeights[r] = 26.25;
     for (const [r, h] of Object.entries(rowHeights)) {
         ws.getRow(Number(r)).height = h;
@@ -230,21 +216,18 @@ export async function generateMonthlyExcelReport(results, month) {
     const reportTitle = `${monthName} ${year}`;
 
     // Row 1: Title
-    const r1 = ws.getRow(1);
-    r1.getCell(1).value = `Production Report Of ${reportTitle}`;
-    r1.getCell(1).font = font(true, 16, 'FF1F4E78');
+    ws.getRow(1).getCell(1).value = `Production Report Of ${reportTitle}`;
+    ws.getRow(1).getCell(1).font = font(true, 16, 'FF1F4E78');
 
-    // Row 3: Company (আপনার রিকোয়েস্ট অনুযায়ী)
-    const r3 = ws.getRow(3);
-    r3.getCell(1).value = 'Zakaria Knitwear Limited (Printing)';
-    r3.getCell(1).font = font(true, 12, 'FF333333');
+    // Row 3: Company
+    ws.getRow(3).getCell(1).value = 'Zakaria Knitwear Limited (Printing)';
+    ws.getRow(3).getCell(1).font = font(true, 12, 'FF333333');
 
     // Row 4: Address (ইটালিক)
-    const r4 = ws.getRow(4);
-    r4.getCell(1).value = 'Porabari, Ghatail, Tangail';
-    r4.getCell(1).font = font(false, 10, 'FF595959', true);
+    ws.getRow(4).getCell(1).value = 'Porabari, Ghatail, Tangail';
+    ws.getRow(4).getCell(1).font = font(false, 10, 'FF595959', true);
 
-    // Row 5: "Production Dates" merged header (F5:AJ5)
+    // Row 5: "Production Dates" merged header
     ws.mergeCells('F5:AJ5');
     const f5 = ws.getCell('F5');
     f5.value = 'Production Dates (1 to 31)';
@@ -253,7 +236,6 @@ export async function generateMonthlyExcelReport(results, month) {
     f5.alignment = align('center', 'center', true);
     f5.border = { top: thin, bottom: thin, left: thin, right: thin };
 
-    // Apply top/bottom border to all cells in merge range
     for (let c = 7; c <= 36; c++) {
         const cell = ws.getRow(5).getCell(c);
         cell.border = { top: thin, bottom: thin };
@@ -283,7 +265,7 @@ export async function generateMonthlyExcelReport(results, month) {
         cell.border = allThinBorder();
     }
 
-    // Date columns 1-31 → cols 6-36
+    // Date columns 1-31
     for (let d = 1; d <= 31; d++) {
         const cell = r6.getCell(5 + d);
         cell.value = d;
@@ -293,7 +275,7 @@ export async function generateMonthlyExcelReport(results, month) {
         cell.border = allThinBorder();
     }
 
-    // Summary headers AK, AL, AM
+    // Summary headers
     const summaryHdrs = [
         [37, 'Prev. Qty\n(Pcs)', darkNav],
         [38, 'Curr. M Qty\n(Pcs)', darkNav],
@@ -314,8 +296,8 @@ export async function generateMonthlyExcelReport(results, month) {
     results.forEach(row => {
         const dateObj = new Date(row.date);
         const day = dateObj.getDate();
-
         const key = `${row.buyer}|${row.style}|${row.print_type}|${row.cm_dzn}`;
+
         if (!groups[key]) {
             groups[key] = {
                 buyer: row.buyer,
@@ -330,7 +312,7 @@ export async function generateMonthlyExcelReport(results, month) {
         groups[key].totalQty += row.quantity;
     });
 
-    // ডাটা রো যোগ করা (রো 7 থেকে)
+    // ডাটা রো যোগ করা
     let currentRow = 7;
     let serialNo = 1;
     const startRow = currentRow;
@@ -387,7 +369,7 @@ export async function generateMonthlyExcelReport(results, month) {
             if (rowFill) cell.fill = rowFill;
         }
 
-        // Prev. Qty (খালি)
+        // Prev. Qty
         const cell37 = wsRow.getCell(37);
         cell37.value = null;
         cell37.font = font(false, 10, 'FF000000');
@@ -395,7 +377,7 @@ export async function generateMonthlyExcelReport(results, month) {
         cell37.border = allThinBorder();
         if (rowFill) cell37.fill = rowFill;
 
-        // Curr. M Qty - SUM ফর্মুলা (আপনার কোড থেকে)
+        // Curr. M Qty - SUM ফর্মুলা
         const cell38 = wsRow.getCell(38);
         cell38.value = { formula: `SUM(F${currentRow}:AF${currentRow})` };
         cell38.font = font(false, 10, 'FF000000');
@@ -403,7 +385,7 @@ export async function generateMonthlyExcelReport(results, month) {
         cell38.border = allThinBorder();
         if (rowFill) cell38.fill = rowFill;
 
-        // Total CM - IF ফর্মুলা (আপনার কোড থেকে)
+        // Total CM - IF ফর্মুলা
         const cell39 = wsRow.getCell(39);
         cell39.value = { formula: `IF(AL${currentRow}>0,(AL${currentRow}/12)*E${currentRow},"")` };
         cell39.font = font(false, 10, 'FF000000');
@@ -416,7 +398,7 @@ export async function generateMonthlyExcelReport(results, month) {
 
     const endRow = currentRow - 1;
 
-    // টোটাল প্রোডাকশন কোয়ান্টিটি রো (রো 22)
+    // টোটাল প্রোডাকশন কোয়ান্টিটি রো
     if (endRow >= startRow) {
         ws.mergeCells(`A${currentRow}:E${currentRow}`);
         const r22a = ws.getCell(`A${currentRow}`);
@@ -441,11 +423,10 @@ export async function generateMonthlyExcelReport(results, month) {
             cell.alignment = align('right', 'center');
             cell.border = allThinBorder();
         }
-
         currentRow++;
     }
 
-    // টোটাল CM ভ্যালু রো (রো 23)
+    // টোটাল CM ভ্যালু রো
     if (endRow >= startRow) {
         ws.mergeCells(`A${currentRow}:E${currentRow}`);
         const r23a = ws.getCell(`A${currentRow}`);
