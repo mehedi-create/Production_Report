@@ -33,9 +33,9 @@ export async function generateDailyExcelReport(results, date) {
     ws.getColumn(2).width = 14;          // B - Buyer
     ws.getColumn(3).width = 14;          // C - Style
     ws.getColumn(4).width = 14;          // D - Print Type
-    ws.getColumn(5).width = 16;          // E - Production Qty
-    ws.getColumn(6).width = 16;          // F - CM Per Dozen
-    ws.getColumn(7).width = 14;          // G - Total CM
+    ws.getColumn(5).width = 16;          // E - Production Qty (Pcs)
+    ws.getColumn(6).width = 16;          // F - CM Per Dozen ($)
+    ws.getColumn(7).width = 14;          // G - Total CM ($)
 
     // রো হাইট (আপনার কোড থেকে)
     ws.getRow(1).height = 21;
@@ -47,12 +47,12 @@ export async function generateDailyExcelReport(results, date) {
     ws.getRow(12).height = 22.5;
     ws.getRow(13).height = 22.5;
 
-    // ডেট ফরম্যাট
+    // ✅ ডেট ফরম্যাট - সিলেক্ট করা ডেট দেখাবে
     const dateObj = new Date(date);
     const day = dateObj.getDate();
     const month = dateObj.toLocaleDateString('en-US', { month: 'long' });
     const year = dateObj.getFullYear();
-    const formattedDate = `[Specify Date]`; // আপনার ফাইল অনুযায়ী
+    const formattedDate = `${month} ${day}, ${year}`;
 
     // Row 1: Title
     ws.getRow(1).getCell(1).value = `Production Report Of ${formattedDate}`;
@@ -62,7 +62,7 @@ export async function generateDailyExcelReport(results, date) {
     ws.getRow(3).getCell(1).value = 'Zakaria Knitwear Limited (Printing)';
     ws.getRow(3).getCell(1).font = font(true, 12, 'FF333333');
 
-    // Row 4: Address
+    // Row 4: Address (ইটালিক)
     ws.getRow(4).getCell(1).value = 'Porabari, Ghatail, Tangail';
     ws.getRow(4).getCell(1).font = font(false, 10, 'FF595959', true);
 
@@ -93,60 +93,53 @@ export async function generateDailyExcelReport(results, date) {
         const wsRow = ws.getRow(currentRow);
 
         // Serial No
-        const cell1 = wsRow.getCell(1);
-        cell1.value = serialNo++;
-        cell1.font = font(false, 11, 'FF000000');
-        cell1.alignment = align('center', 'center');
-        cell1.border = allThinBorder();
-        if (rowFill) cell1.fill = rowFill;
+        wsRow.getCell(1).value = serialNo++;
+        wsRow.getCell(1).font = font(false, 11, 'FF000000');
+        wsRow.getCell(1).alignment = align('center', 'center');
+        wsRow.getCell(1).border = allThinBorder();
+        if (rowFill) wsRow.getCell(1).fill = rowFill;
 
         // Buyer
-        const cell2 = wsRow.getCell(2);
-        cell2.value = row.buyer;
-        cell2.font = font(false, 11, 'FF000000');
-        cell2.alignment = align('left', 'center');
-        cell2.border = allThinBorder();
-        if (rowFill) cell2.fill = rowFill;
+        wsRow.getCell(2).value = row.buyer;
+        wsRow.getCell(2).font = font(false, 11, 'FF000000');
+        wsRow.getCell(2).alignment = align('left', 'center');
+        wsRow.getCell(2).border = allThinBorder();
+        if (rowFill) wsRow.getCell(2).fill = rowFill;
 
         // Style
-        const cell3 = wsRow.getCell(3);
-        cell3.value = row.style;
-        cell3.font = font(false, 11, 'FF000000');
-        cell3.alignment = align('left', 'center');
-        cell3.border = allThinBorder();
-        if (rowFill) cell3.fill = rowFill;
+        wsRow.getCell(3).value = row.style;
+        wsRow.getCell(3).font = font(false, 11, 'FF000000');
+        wsRow.getCell(3).alignment = align('left', 'center');
+        wsRow.getCell(3).border = allThinBorder();
+        if (rowFill) wsRow.getCell(3).fill = rowFill;
 
         // Print Type
-        const cell4 = wsRow.getCell(4);
-        cell4.value = row.print_type;
-        cell4.font = font(false, 11, 'FF000000');
-        cell4.alignment = align('center', 'center');
-        cell4.border = allThinBorder();
-        if (rowFill) cell4.fill = rowFill;
+        wsRow.getCell(4).value = row.print_type;
+        wsRow.getCell(4).font = font(false, 11, 'FF000000');
+        wsRow.getCell(4).alignment = align('center', 'center');
+        wsRow.getCell(4).border = allThinBorder();
+        if (rowFill) wsRow.getCell(4).fill = rowFill;
 
         // Production Qty
-        const cell5 = wsRow.getCell(5);
-        cell5.value = row.quantity;
-        cell5.font = font(false, 11, 'FF000000');
-        cell5.alignment = align('right', 'center');
-        cell5.border = allThinBorder();
-        if (rowFill) cell5.fill = rowFill;
+        wsRow.getCell(5).value = row.quantity;
+        wsRow.getCell(5).font = font(false, 11, 'FF000000');
+        wsRow.getCell(5).alignment = align('right', 'center');
+        wsRow.getCell(5).border = allThinBorder();
+        if (rowFill) wsRow.getCell(5).fill = rowFill;
 
         // CM Per Dozen
-        const cell6 = wsRow.getCell(6);
-        cell6.value = row.cm_dzn;
-        cell6.font = font(false, 11, 'FF000000');
-        cell6.alignment = align('right', 'center');
-        cell6.border = allThinBorder();
-        if (rowFill) cell6.fill = rowFill;
+        wsRow.getCell(6).value = row.cm_dzn;
+        wsRow.getCell(6).font = font(false, 11, 'FF000000');
+        wsRow.getCell(6).alignment = align('right', 'center');
+        wsRow.getCell(6).border = allThinBorder();
+        if (rowFill) wsRow.getCell(6).fill = rowFill;
 
         // Total CM - ফর্মুলা (আপনার কোড থেকে)
-        const cell7 = wsRow.getCell(7);
-        cell7.value = { formula: `(E${currentRow}/12)*F${currentRow}` };
-        cell7.font = font(false, 11, 'FF000000');
-        cell7.alignment = align('right', 'center');
-        cell7.border = allThinBorder();
-        if (rowFill) cell7.fill = rowFill;
+        wsRow.getCell(7).value = { formula: `(E${currentRow}/12)*F${currentRow}` };
+        wsRow.getCell(7).font = font(false, 11, 'FF000000');
+        wsRow.getCell(7).alignment = align('right', 'center');
+        wsRow.getCell(7).border = allThinBorder();
+        if (rowFill) wsRow.getCell(7).fill = rowFill;
 
         currentRow++;
     });
@@ -246,7 +239,7 @@ export async function generateMonthlyExcelReport(results, month) {
     r3.getCell(1).value = 'Zakaria Knitwear Limited (Printing)';
     r3.getCell(1).font = font(true, 12, 'FF333333');
 
-    // Row 4: Address
+    // Row 4: Address (ইটালিক)
     const r4 = ws.getRow(4);
     r4.getCell(1).value = 'Porabari, Ghatail, Tangail';
     r4.getCell(1).font = font(false, 10, 'FF595959', true);
@@ -349,44 +342,39 @@ export async function generateMonthlyExcelReport(results, month) {
         const wsRow = ws.getRow(currentRow);
 
         // SL
-        const cell1 = wsRow.getCell(1);
-        cell1.value = serialNo++;
-        cell1.font = font(false, 10, 'FF000000');
-        cell1.alignment = align('center', 'center');
-        cell1.border = allThinBorder();
-        if (rowFill) cell1.fill = rowFill;
+        wsRow.getCell(1).value = serialNo++;
+        wsRow.getCell(1).font = font(false, 10, 'FF000000');
+        wsRow.getCell(1).alignment = align('center', 'center');
+        wsRow.getCell(1).border = allThinBorder();
+        if (rowFill) wsRow.getCell(1).fill = rowFill;
 
         // Buyer
-        const cell2 = wsRow.getCell(2);
-        cell2.value = data.buyer;
-        cell2.font = font(false, 10, 'FF000000');
-        cell2.alignment = align('left', 'center');
-        cell2.border = allThinBorder();
-        if (rowFill) cell2.fill = rowFill;
+        wsRow.getCell(2).value = data.buyer;
+        wsRow.getCell(2).font = font(false, 10, 'FF000000');
+        wsRow.getCell(2).alignment = align('left', 'center');
+        wsRow.getCell(2).border = allThinBorder();
+        if (rowFill) wsRow.getCell(2).fill = rowFill;
 
         // Style
-        const cell3 = wsRow.getCell(3);
-        cell3.value = data.style;
-        cell3.font = font(false, 10, 'FF000000');
-        cell3.alignment = align('left', 'center');
-        cell3.border = allThinBorder();
-        if (rowFill) cell3.fill = rowFill;
+        wsRow.getCell(3).value = data.style;
+        wsRow.getCell(3).font = font(false, 10, 'FF000000');
+        wsRow.getCell(3).alignment = align('left', 'center');
+        wsRow.getCell(3).border = allThinBorder();
+        if (rowFill) wsRow.getCell(3).fill = rowFill;
 
         // Print Type
-        const cell4 = wsRow.getCell(4);
-        cell4.value = data.print_type;
-        cell4.font = font(false, 10, 'FF000000');
-        cell4.alignment = align('center', 'center');
-        cell4.border = allThinBorder();
-        if (rowFill) cell4.fill = rowFill;
+        wsRow.getCell(4).value = data.print_type;
+        wsRow.getCell(4).font = font(false, 10, 'FF000000');
+        wsRow.getCell(4).alignment = align('center', 'center');
+        wsRow.getCell(4).border = allThinBorder();
+        if (rowFill) wsRow.getCell(4).fill = rowFill;
 
         // CM/Doz
-        const cell5 = wsRow.getCell(5);
-        cell5.value = data.cm_dzn;
-        cell5.font = font(false, 10, 'FF000000');
-        cell5.alignment = align('right', 'center');
-        cell5.border = allThinBorder();
-        if (rowFill) cell5.fill = rowFill;
+        wsRow.getCell(5).value = data.cm_dzn;
+        wsRow.getCell(5).font = font(false, 10, 'FF000000');
+        wsRow.getCell(5).alignment = align('right', 'center');
+        wsRow.getCell(5).border = allThinBorder();
+        if (rowFill) wsRow.getCell(5).fill = rowFill;
 
         // তারিখ কলাম (1-31)
         for (let d = 1; d <= 31; d++) {
