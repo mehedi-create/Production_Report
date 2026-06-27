@@ -1,5 +1,5 @@
 import { generateDailyExcelReport, generateMonthlyExcelReport, generateExcelReport } from './excel.js';
-import { generateDailyPdfReport, generateMonthlyPdfReport, generatePdfReport } from './pdf.js';
+// ✅ PDF ইমপোর্ট রিমুভ করা হয়েছে
 
 const HTML_CONTENT = `
 <!DOCTYPE html>
@@ -119,13 +119,7 @@ const HTML_CONTENT = `
         .format-btn.excel:hover {
             background: #059669;
         }
-        .format-btn.pdf {
-            background: #ef4444;
-            color: white;
-        }
-        .format-btn.pdf:hover {
-            background: #dc2626;
-        }
+        /* ✅ PDF বাটন স্টাইল রিমুভ */
 
         .date-selector, .month-selector {
             margin-top: 20px;
@@ -253,8 +247,8 @@ const HTML_CONTENT = `
 
             <div class="format-selector">
                 <div class="format-buttons">
-                    <button class="format-btn excel" onclick="downloadDailyReport('excel')">📊 Download Excel</button>
-                    <button class="format-btn pdf" onclick="downloadDailyReport('pdf')">📄 Download PDF</button>
+                    <!-- ✅ শুধু এক্সেল বাটন -->
+                    <button class="format-btn excel" onclick="downloadDailyReport()">📊 Download Excel</button>
                 </div>
             </div>
 
@@ -271,8 +265,8 @@ const HTML_CONTENT = `
 
             <div class="format-selector">
                 <div class="format-buttons">
-                    <button class="format-btn excel" onclick="downloadMonthlyReport('excel')">📊 Download Excel</button>
-                    <button class="format-btn pdf" onclick="downloadMonthlyReport('pdf')">📄 Download PDF</button>
+                    <!-- ✅ শুধু এক্সেল বাটন -->
+                    <button class="format-btn excel" onclick="downloadMonthlyReport()">📊 Download Excel</button>
                 </div>
             </div>
 
@@ -332,32 +326,23 @@ const HTML_CONTENT = `
         document.getElementById('monthly-section').style.display = 'none';
     }
 
-    function downloadDailyReport(format) {
+    // ✅ শুধু এক্সেল ডাউনলোড ফাংশন
+    function downloadDailyReport() {
         const date = document.getElementById('daily-date').value;
         if (!date) {
             alert('Please select a date');
             return;
         }
-
-        if (format === 'excel') {
-            window.location.href = '/api/daily-excel?date=' + date;
-        } else if (format === 'pdf') {
-            window.location.href = '/api/daily-pdf?date=' + date;
-        }
+        window.location.href = '/api/daily-excel?date=' + date;
     }
 
-    function downloadMonthlyReport(format) {
+    function downloadMonthlyReport() {
         const monthYear = document.getElementById('month-year').value;
         if (!monthYear) {
             alert('Please select a month');
             return;
         }
-
-        if (format === 'excel') {
-            window.location.href = '/api/monthly-excel?month=' + monthYear;
-        } else if (format === 'pdf') {
-            window.location.href = '/api/monthly-pdf?month=' + monthYear;
-        }
+        window.location.href = '/api/monthly-excel?month=' + monthYear;
     }
 
     function setupAutocomplete(inputId, dataType) {
@@ -500,91 +485,146 @@ const HTML_CONTENT = `
 export default {
     async fetch(request, env, ctx) {
         const url = new URL(request.url);
-        const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" };
+        const headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        };
 
         if (request.method === "OPTIONS") return new Response(null, { headers });
 
+        // হোম পেজ
         if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
-            return new Response(HTML_CONTENT, { headers: { ...headers, "Content-Type": "text/html; charset=utf-8" } });
+            return new Response(HTML_CONTENT, {
+                headers: { ...headers, "Content-Type": "text/html; charset=utf-8" }
+            });
         }
 
-        // Auto-suggestions API
+        // সাজেশন API
         if (request.method === "GET" && url.pathname === "/api/suggestions") {
             try {
-                const buyersData = await env.DB.prepare("SELECT DISTINCT buyer FROM production WHERE buyer IS NOT NULL AND buyer != '' ORDER BY buyer ASC").all();
-                const stylesData = await env.DB.prepare("SELECT DISTINCT style FROM production WHERE style IS NOT NULL AND style != '' ORDER BY style ASC").all();
-                const ptData = await env.DB.prepare("SELECT DISTINCT print_type FROM production WHERE print_type IS NOT NULL AND print_type != '' ORDER BY print_type ASC").all();
+                const buyersData = await env.DB.prepare(
+                    "SELECT DISTINCT buyer FROM production WHERE buyer IS NOT NULL AND buyer != '' ORDER BY buyer ASC"
+                ).all();
+                const stylesData = await env.DB.prepare(
+                    "SELECT DISTINCT style FROM production WHERE style IS NOT NULL AND style != '' ORDER BY style ASC"
+                ).all();
+                const ptData = await env.DB.prepare(
+                    "SELECT DISTINCT print_type FROM production WHERE print_type IS NOT NULL AND print_type != '' ORDER BY print_type ASC"
+                ).all();
 
                 return new Response(JSON.stringify({
                     buyers: buyersData.results.map(r => r.buyer),
                     styles: stylesData.results.map(r => r.style),
-                    print_types: Array.from(new Set([...['Stone Attached', 'Neck Print', 'Table Print'], ...ptData.results.map(r => r.print_type)]))
+                    print_types: Array.from(new Set([
+                        ...['Stone Attached', 'Neck Print', 'Table Print'],
+                        ...ptData.results.map(r => r.print_type)
+                    ]))
                 }), { headers: { ...headers, "Content-Type": "application/json" } });
-            } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }); }
-        }
-
-        // History API
-        if (request.method === "GET" && url.pathname === "/api/history") {
-            try {
-                const { results } = await env.DB.prepare("SELECT id, date, buyer, style, quantity FROM production ORDER BY date DESC, id DESC LIMIT 200").all();
-                return new Response(JSON.stringify(results), { headers: { ...headers, "Content-Type": "application/json" } });
             } catch (err) {
-                return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } });
+                return new Response(JSON.stringify({ error: err.message }), {
+                    status: 500,
+                    headers: { ...headers, "Content-Type": "application/json" }
+                });
             }
         }
 
-        // Delete Entry API
+        // হিস্টরি API
+        if (request.method === "GET" && url.pathname === "/api/history") {
+            try {
+                const { results } = await env.DB.prepare(
+                    "SELECT id, date, buyer, style, quantity FROM production ORDER BY date DESC, id DESC LIMIT 200"
+                ).all();
+                return new Response(JSON.stringify(results), {
+                    headers: { ...headers, "Content-Type": "application/json" }
+                });
+            } catch (err) {
+                return new Response(JSON.stringify({ error: err.message }), {
+                    status: 500,
+                    headers: { ...headers, "Content-Type": "application/json" }
+                });
+            }
+        }
+
+        // ডিলিট API
         if (request.method === "POST" && url.pathname === "/api/delete") {
             try {
                 const { id } = await request.json();
                 await env.DB.prepare("DELETE FROM production WHERE id = ?").bind(id).run();
-                return new Response(JSON.stringify({ success: true }), { headers: { ...headers, "Content-Type": "application/json" } });
+                return new Response(JSON.stringify({ success: true }), {
+                    headers: { ...headers, "Content-Type": "application/json" }
+                });
             } catch (err) {
-                return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } });
+                return new Response(JSON.stringify({ success: false, error: err.message }), {
+                    status: 500,
+                    headers: { ...headers, "Content-Type": "application/json" }
+                });
             }
         }
 
-        // Save Form API
+        // সেভ API
         if (request.method === "POST" && url.pathname === "/api/save") {
             try {
                 const body = await request.json();
                 let finalCmDzn = body.cm_dzn;
 
                 if (finalCmDzn === "" || finalCmDzn === null || finalCmDzn === undefined) {
-                    const previousEntry = await env.DB.prepare("SELECT cm_dzn FROM production WHERE buyer = ? AND style = ? AND cm_dzn IS NOT NULL ORDER BY id DESC LIMIT 1")
-                        .bind(body.buyer, body.style).first();
+                    const previousEntry = await env.DB.prepare(
+                        "SELECT cm_dzn FROM production WHERE buyer = ? AND style = ? AND cm_dzn IS NOT NULL ORDER BY id DESC LIMIT 1"
+                    ).bind(body.buyer, body.style).first();
 
                     if (previousEntry) {
                         finalCmDzn = previousEntry.cm_dzn;
                     } else {
-                        return new Response(JSON.stringify({ success: false, error: "This is a new Style. Please provide CM per Dozen ($) for the first time!" }), { status: 400, headers: { ...headers, "Content-Type": "application/json" } });
+                        return new Response(JSON.stringify({
+                            success: false,
+                            error: "This is a new Style. Please provide CM per Dozen ($) for the first time!"
+                        }), { status: 400, headers: { ...headers, "Content-Type": "application/json" } });
                     }
                 } else {
                     finalCmDzn = parseFloat(finalCmDzn);
                 }
 
-                await env.DB.prepare("INSERT INTO production (date, buyer, style, print_type, cm_dzn, quantity) VALUES (?, ?, ?, ?, ?, ?)")
-                    .bind(body.date, body.buyer, body.style, body.print_type, finalCmDzn, body.quantity).run();
+                await env.DB.prepare(
+                    "INSERT INTO production (date, buyer, style, print_type, cm_dzn, quantity) VALUES (?, ?, ?, ?, ?, ?)"
+                ).bind(
+                    body.date, body.buyer, body.style, body.print_type, finalCmDzn, body.quantity
+                ).run();
 
-                return new Response(JSON.stringify({ success: true }), { headers: { ...headers, "Content-Type": "application/json" } });
-            } catch (err) { return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }); }
+                return new Response(JSON.stringify({ success: true }), {
+                    headers: { ...headers, "Content-Type": "application/json" }
+                });
+            } catch (err) {
+                return new Response(JSON.stringify({ success: false, error: err.message }), {
+                    status: 500,
+                    headers: { ...headers, "Content-Type": "application/json" }
+                });
+            }
         }
 
-        // ==================== NEW API ENDPOINTS ====================
-
-        // Daily Excel Report
+        // ✅ ডেইলি এক্সেল রিপোর্ট
         if (request.method === "GET" && url.pathname === "/api/daily-excel") {
             try {
                 const date = url.searchParams.get('date');
                 if (!date) {
-                    return new Response(JSON.stringify({ error: 'Date parameter is required' }), { status: 400, headers: { ...headers, "Content-Type": "application/json" } });
+                    return new Response(JSON.stringify({ error: 'Date parameter is required' }), {
+                        status: 400,
+                        headers: { ...headers, "Content-Type": "application/json" }
+                    });
                 }
 
-                const { results } = await env.DB.prepare("SELECT * FROM production WHERE date = ? ORDER BY print_type ASC, buyer ASC, style ASC").bind(date).all();
+                const { results } = await env.DB.prepare(
+                    "SELECT * FROM production WHERE date = ? ORDER BY print_type ASC, buyer ASC, style ASC"
+                ).bind(date).all();
+
                 const buffer = await generateDailyExcelReport(results, date);
 
                 const dateObj = new Date(date);
-                const formattedDate = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).replace(/\//g, '-');
+                const formattedDate = dateObj.toLocaleDateString('en-US', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }).replace(/\//g, '-');
 
                 return new Response(buffer, {
                     headers: {
@@ -593,46 +633,33 @@ export default {
                         "Content-Disposition": "attachment; filename=\"ZKL_Daily_Report_" + formattedDate + ".xlsx\""
                     }
                 });
-            } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
+            } catch (err) {
+                return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
+            }
         }
 
-        // Daily PDF Report
-        if (request.method === "GET" && url.pathname === "/api/daily-pdf") {
-            try {
-                const date = url.searchParams.get('date');
-                if (!date) {
-                    return new Response(JSON.stringify({ error: 'Date parameter is required' }), { status: 400, headers: { ...headers, "Content-Type": "application/json" } });
-                }
-
-                const { results } = await env.DB.prepare("SELECT * FROM production WHERE date = ? ORDER BY print_type ASC, buyer ASC, style ASC").bind(date).all();
-                const pdfBytes = await generateDailyPdfReport(results, date);
-
-                const dateObj = new Date(date);
-                const formattedDate = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).replace(/\//g, '-');
-
-                return new Response(pdfBytes, {
-                    headers: {
-                        ...headers,
-                        "Content-Type": "application/pdf",
-                        "Content-Disposition": "attachment; filename=\"ZKL_Daily_Report_" + formattedDate + ".pdf\""
-                    }
-                });
-            } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
-        }
-
-        // Monthly Excel Report
+        // ✅ মান্থলি এক্সেল রিপোর্ট
         if (request.method === "GET" && url.pathname === "/api/monthly-excel") {
             try {
                 const month = url.searchParams.get('month');
                 if (!month) {
-                    return new Response(JSON.stringify({ error: 'Month parameter is required (format: YYYY-MM)' }), { status: 400, headers: { ...headers, "Content-Type": "application/json" } });
+                    return new Response(JSON.stringify({ error: 'Month parameter is required (format: YYYY-MM)' }), {
+                        status: 400,
+                        headers: { ...headers, "Content-Type": "application/json" }
+                    });
                 }
 
-                const { results } = await env.DB.prepare("SELECT * FROM production WHERE strftime('%Y-%m', date) = ? ORDER BY print_type ASC, date ASC").bind(month).all();
+                const { results } = await env.DB.prepare(
+                    "SELECT * FROM production WHERE strftime('%Y-%m', date) = ? ORDER BY print_type ASC, date ASC"
+                ).bind(month).all();
+
                 const buffer = await generateMonthlyExcelReport(results, month);
 
                 const monthObj = new Date(month);
-                const monthName = monthObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).replace(/\//g, '-');
+                const monthName = monthObj.toLocaleDateString('en-US', {
+                    month: 'short',
+                    year: 'numeric'
+                }).replace(/\//g, '-');
 
                 return new Response(buffer, {
                     headers: {
@@ -641,50 +668,31 @@ export default {
                         "Content-Disposition": "attachment; filename=\"ZKL_Monthly_Report_" + monthName + ".xlsx\""
                     }
                 });
-            } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
+            } catch (err) {
+                return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
+            }
         }
 
-        // Monthly PDF Report
-        if (request.method === "GET" && url.pathname === "/api/monthly-pdf") {
-            try {
-                const month = url.searchParams.get('month');
-                if (!month) {
-                    return new Response(JSON.stringify({ error: 'Month parameter is required (format: YYYY-MM)' }), { status: 400, headers: { ...headers, "Content-Type": "application/json" } });
-                }
-
-                const { results } = await env.DB.prepare("SELECT * FROM production WHERE strftime('%Y-%m', date) = ? ORDER BY print_type ASC, date ASC").bind(month).all();
-                const pdfBytes = await generateMonthlyPdfReport(results, month);
-
-                const monthObj = new Date(month);
-                const monthName = monthObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).replace(/\//g, '-');
-
-                return new Response(pdfBytes, {
-                    headers: {
-                        ...headers,
-                        "Content-Type": "application/pdf",
-                        "Content-Disposition": "attachment; filename=\"ZKL_Monthly_Report_" + monthName + ".pdf\""
-                    }
-                });
-            } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
-        }
-
-        // Original Excel API (for backward compatibility)
+        // ব্যাকওয়ার্ড কম্প্যাটিবিলিটি - পুরানো এক্সেল API
         if (request.method === "GET" && url.pathname === "/api/excel") {
             try {
-                const { results } = await env.DB.prepare("SELECT * FROM production ORDER BY print_type ASC, date ASC").all();
+                const { results } = await env.DB.prepare(
+                    "SELECT * FROM production ORDER BY print_type ASC, date ASC"
+                ).all();
                 const buffer = await generateExcelReport(results);
-                return new Response(buffer, { headers: { ...headers, "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Content-Disposition": "attachment; filename=\"ZKL_Printing_Report.xlsx\"" } });
-            } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
+                return new Response(buffer, {
+                    headers: {
+                        ...headers,
+                        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "Content-Disposition": "attachment; filename=\"ZKL_Printing_Report.xlsx\""
+                    }
+                });
+            } catch (err) {
+                return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
+            }
         }
 
-        // Original PDF API (for backward compatibility)
-        if (request.method === "GET" && url.pathname === "/api/pdf") {
-            try {
-                const { results } = await env.DB.prepare("SELECT * FROM production ORDER BY print_type ASC, date ASC").all();
-                const pdfBytes = await generatePdfReport(results);
-                return new Response(pdfBytes, { headers: { ...headers, "Content-Type": "application/pdf", "Content-Disposition": "attachment; filename=\"ZKL_Printing_Report.pdf\"" } });
-            } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
-        }
+        // ✅ সকল PDF এন্ডপয়েন্ট রিমুভ করা হয়েছে
 
         return new Response("Not Found", { status: 404, headers });
     }
