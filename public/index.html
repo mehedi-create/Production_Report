@@ -21,12 +21,102 @@
         .btn-submit:hover { background: var(--primary-hover); }
         .btn-back { background: #64748b; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 15px; cursor: pointer; margin-top: 10px; }
         .btn-back:hover { background: #475569; }
-        .download-box { border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
-        .download-title { font-weight: 600; font-size: 16px; }
-        .btn-dl { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; }
-        .btn-dl:hover { background: #059669; }
-        .btn-dl.pdf { background: #ef4444; }
-        .btn-dl.pdf:hover { background: #dc2626; }
+
+        /* New styles for download selection page */
+        .report-option {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        .report-option:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(30,58,138,0.1);
+        }
+        .report-icon {
+            font-size: 28px;
+            margin-right: 15px;
+            color: var(--primary);
+        }
+        .report-content {
+            flex: 1;
+        }
+        .report-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+        .report-desc {
+            font-size: 14px;
+            color: #64748b;
+        }
+        .download-arrow {
+            color: #94a3b8;
+            font-size: 20px;
+        }
+
+        .format-selector {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .format-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .format-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .format-btn.excel {
+            background: #10b981;
+            color: white;
+        }
+        .format-btn.excel:hover {
+            background: #059669;
+        }
+        .format-btn.pdf {
+            background: #ef4444;
+            color: white;
+        }
+        .format-btn.pdf:hover {
+            background: #dc2626;
+        }
+
+        .date-selector, .month-selector {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .date-selector label, .month-selector label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .date-selector input, .month-selector input, .month-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -45,13 +135,13 @@
         <form id="productionForm">
             <label>Production Date</label>
             <input type="date" id="date" required>
-            
+
             <label>Buyer Name</label>
             <input type="text" id="buyer" placeholder="e.g., ABD, FineLook, ZAL, Grupo Sourcing" required>
-            
+
             <label>Style No</label>
             <input type="text" id="style" placeholder="e.g., FAIZA-13, EIL-1201" required>
-            
+
             <label>Print Type / Section</label>
             <select id="print_type" required>
                 <option value="Stone Attached">Stone Attached</option>
@@ -71,25 +161,67 @@
     </div>
 
     <div id="view-download" class="view">
-        <h2>Report Export Engine</h2>
-        
-        <div class="download-box">
-            <div>
-                <div class="download-title">Excel Master Spreadsheet</div>
-                <small style="color:#64748b;">Full month grid matrix, auto formulas, grouped tabs</small>
+        <h2>Report Download Options</h2>
+
+        <!-- Daily Report Option -->
+        <div class="report-option" onclick="showDailyOptions()">
+            <div class="report-icon">📥</div>
+            <div class="report-content">
+                <div class="report-title">ডাউনলোড ডেইলি রিপোর্ট</div>
+                <div class="report-desc">Select a specific date to download daily production report</div>
             </div>
-            <a href="/api/excel" target="_blank" class="btn-dl">Export XLSX</a>
+            <div class="download-arrow">→</div>
         </div>
 
-        <div class="download-box">
-            <div>
-                <div class="download-title">PDF Executive Report</div>
-                <small style="color:#64748b;">Formatted matrix ready for dynamic laser printing</small>
+        <!-- Monthly Report Option -->
+        <div class="report-option" onclick="showMonthlyOptions()">
+            <div class="report-icon">📥</div>
+            <div class="report-content">
+                <div class="report-title">ডাউনলোড মান্থলি রিপোর্ট</div>
+                <div class="report-desc">Select a specific month to download monthly production report</div>
             </div>
-            <a href="/api/pdf" target="_blank" class="btn-dl pdf">Export PDF</a>
+            <div class="download-arrow">→</div>
         </div>
 
-        <button type="button" onclick="navigate('view-home')" class="btn-back">Back to Home</button>
+        <!-- Daily Report Selection (Hidden by default) -->
+        <div id="daily-section" style="display: none;">
+            <h2>Daily Report Download</h2>
+
+            <div class="date-selector">
+                <label for="daily-date">Select Date</label>
+                <input type="date" id="daily-date" required>
+            </div>
+
+            <div class="format-selector">
+                <div class="format-buttons">
+                    <button class="format-btn excel" onclick="downloadDailyReport('excel')">📊 Download Excel</button>
+                    <button class="format-btn pdf" onclick="downloadDailyReport('pdf')">📄 Download PDF</button>
+                </div>
+            </div>
+
+            <button type="button" onclick="backToDownloadOptions()" class="btn-back">Back to Options</button>
+        </div>
+
+        <!-- Monthly Report Selection (Hidden by default) -->
+        <div id="monthly-section" style="display: none;">
+            <h2>Monthly Report Download</h2>
+
+            <div class="month-selector">
+                <label for="month-year">Select Month and Year</label>
+                <input type="month" id="month-year" required>
+            </div>
+
+            <div class="format-selector">
+                <div class="format-buttons">
+                    <button class="format-btn excel" onclick="downloadMonthlyReport('excel')">📊 Download Excel</button>
+                    <button class="format-btn pdf" onclick="downloadMonthlyReport('pdf')">📄 Download PDF</button>
+                </div>
+            </div>
+
+            <button type="button" onclick="backToDownloadOptions()" class="btn-back">Back to Options</button>
+        </div>
+
+        <button type="button" onclick="navigate('view-home')" class="btn-back" id="back-to-home">Back to Home</button>
     </div>
 </div>
 
@@ -97,6 +229,60 @@
     function navigate(viewId) {
         document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
+
+        document.getElementById('daily-section').style.display = 'none';
+        document.getElementById('monthly-section').style.display = 'none';
+    }
+
+    function showDailyOptions() {
+        document.getElementById('daily-section').style.display = 'block';
+        document.getElementById('monthly-section').style.display = 'none';
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('daily-date').value = today;
+    }
+
+    function showMonthlyOptions() {
+        document.getElementById('monthly-section').style.display = 'block';
+        document.getElementById('daily-section').style.display = 'none';
+
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        document.getElementById('month-year').value = `${year}-${month}`;
+    }
+
+    function backToDownloadOptions() {
+        document.getElementById('daily-section').style.display = 'none';
+        document.getElementById('monthly-section').style.display = 'none';
+    }
+
+    function downloadDailyReport(format) {
+        const date = document.getElementById('daily-date').value;
+        if (!date) {
+            alert('Please select a date');
+            return;
+        }
+
+        if (format === 'excel') {
+            window.location.href = `/api/daily-excel?date=${date}`;
+        } else if (format === 'pdf') {
+            window.location.href = `/api/daily-pdf?date=${date}`;
+        }
+    }
+
+    function downloadMonthlyReport(format) {
+        const monthYear = document.getElementById('month-year').value;
+        if (!monthYear) {
+            alert('Please select a month');
+            return;
+        }
+
+        if (format === 'excel') {
+            window.location.href = `/api/monthly-excel?month=${monthYear}`;
+        } else if (format === 'pdf') {
+            window.location.href = `/api/monthly-pdf?month=${monthYear}`;
+        }
     }
 
     document.getElementById('productionForm').addEventListener('submit', async (e) => {
