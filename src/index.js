@@ -140,7 +140,7 @@ const HTML_CONTENT = `
             font-weight: 600;
             color: #475569;
         }
-        .date-selector input, .month-selector input, .month-selector select {
+        .date-selector input, .month-selector input {
             width: 100%;
             padding: 10px;
             border: 1px solid #cbd5e1;
@@ -301,7 +301,6 @@ const HTML_CONTENT = `
 
         document.getElementById('daily-section').style.display = 'none';
         document.getElementById('monthly-section').style.display = 'none';
-        document.getElementById('back-to-home').style.display = 'block';
 
         if(viewId === 'view-update') loadDatabaseSuggestions();
         if(viewId === 'view-history') loadHistory();
@@ -310,27 +309,27 @@ const HTML_CONTENT = `
     function showDailyOptions() {
         document.getElementById('daily-section').style.display = 'block';
         document.getElementById('monthly-section').style.display = 'none';
-        document.getElementById('back-to-home').style.display = 'none';
 
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('daily-date').value = today;
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById('daily-date').value = year + '-' + month + '-' + day;
     }
 
     function showMonthlyOptions() {
         document.getElementById('monthly-section').style.display = 'block';
         document.getElementById('daily-section').style.display = 'none';
-        document.getElementById('back-to-home').style.display = 'none';
 
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
-        document.getElementById('month-year').value = `${year}-${month}`;
+        document.getElementById('month-year').value = year + '-' + month;
     }
 
     function backToDownloadOptions() {
         document.getElementById('daily-section').style.display = 'none';
         document.getElementById('monthly-section').style.display = 'none';
-        document.getElementById('back-to-home').style.display = 'block';
     }
 
     function downloadDailyReport(format) {
@@ -341,9 +340,9 @@ const HTML_CONTENT = `
         }
 
         if (format === 'excel') {
-            window.location.href = `/api/daily-excel?date=${date}`;
+            window.location.href = '/api/daily-excel?date=' + date;
         } else if (format === 'pdf') {
-            window.location.href = `/api/daily-pdf?date=${date}`;
+            window.location.href = '/api/daily-pdf?date=' + date;
         }
     }
 
@@ -355,9 +354,9 @@ const HTML_CONTENT = `
         }
 
         if (format === 'excel') {
-            window.location.href = `/api/monthly-excel?month=${monthYear}`;
+            window.location.href = '/api/monthly-excel?month=' + monthYear;
         } else if (format === 'pdf') {
-            window.location.href = `/api/monthly-pdf?month=${monthYear}`;
+            window.location.href = '/api/monthly-pdf?month=' + monthYear;
         }
     }
 
@@ -571,7 +570,7 @@ export default {
             } catch (err) { return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }); }
         }
 
-        // NEW API ENDPOINTS FOR DAILY AND MONTHLY REPORTS
+        // ==================== NEW API ENDPOINTS ====================
 
         // Daily Excel Report
         if (request.method === "GET" && url.pathname === "/api/daily-excel") {
@@ -591,7 +590,7 @@ export default {
                     headers: {
                         ...headers,
                         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        "Content-Disposition": `attachment; filename="ZKL_Daily_Report_${formattedDate}.xlsx"`
+                        "Content-Disposition": "attachment; filename=\"ZKL_Daily_Report_" + formattedDate + ".xlsx\""
                     }
                 });
             } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
@@ -615,7 +614,7 @@ export default {
                     headers: {
                         ...headers,
                         "Content-Type": "application/pdf",
-                        "Content-Disposition": `attachment; filename="ZKL_Daily_Report_${formattedDate}.pdf"`
+                        "Content-Disposition": "attachment; filename=\"ZKL_Daily_Report_" + formattedDate + ".pdf\""
                     }
                 });
             } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
@@ -639,7 +638,7 @@ export default {
                     headers: {
                         ...headers,
                         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        "Content-Disposition": `attachment; filename="ZKL_Monthly_Report_${monthName}.xlsx"`
+                        "Content-Disposition": "attachment; filename=\"ZKL_Monthly_Report_" + monthName + ".xlsx\""
                     }
                 });
             } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
@@ -663,7 +662,7 @@ export default {
                     headers: {
                         ...headers,
                         "Content-Type": "application/pdf",
-                        "Content-Disposition": `attachment; filename="ZKL_Monthly_Report_${monthName}.pdf"`
+                        "Content-Disposition": "attachment; filename=\"ZKL_Monthly_Report_" + monthName + ".pdf\""
                     }
                 });
             } catch (err) { return new Response(JSON.stringify({ error: err.message }), { status: 500, headers }); }
