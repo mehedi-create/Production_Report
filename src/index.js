@@ -1,5 +1,4 @@
 import { generateDailyExcelReport, generateMonthlyExcelReport, generateExcelReport } from './excel.js';
-// ✅ PDF ইমপোর্ট রিমুভ করা হয়েছে
 
 const HTML_CONTENT = `
 <!DOCTYPE html>
@@ -119,28 +118,6 @@ const HTML_CONTENT = `
         .format-btn.excel:hover {
             background: #059669;
         }
-        /* ✅ PDF বাটন স্টাইল রিমুভ */
-
-        .date-selector, .month-selector {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        .date-selector label, .month-selector label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #475569;
-        }
-        .date-selector input, .month-selector input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>
@@ -182,8 +159,8 @@ const HTML_CONTENT = `
                 <input type="text" id="print_type" placeholder="Click to see existing or type to search..." required>
             </div>
 
-            <label for="cm_dzn">CM per Dozen ($) <span style="color:#94a3b8; font-weight:normal;">(Optional if already saved before)</span></label>
-            <input type="number" id="cm_dzn" step="0.0001" placeholder="e.g., 1.40 (Leave empty to use last price)">
+            <label for="cm_dzn">CM per Dozen ($) <span style="color:#94a3b8; font-weight:normal;">(Optional if already saved for this Buyer, Style & Print Type)</span></label>
+            <input type="number" id="cm_dzn" step="0.0001" placeholder="e.g., 1.40 (Leave empty to use last price for this combination)">
 
             <label for="quantity">Quantity (Pcs)</label>
             <input type="number" id="quantity" placeholder="e.g., 1500" required>
@@ -204,12 +181,13 @@ const HTML_CONTENT = `
                         <th>Date</th>
                         <th>Buyer</th>
                         <th>Style</th>
+                        <th>Print Type</th>
                         <th>Qty</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="history-tbody">
-                    <tr><td colspan="5" style="text-align:center;">Loading...</td></tr>
+                    <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -239,37 +217,29 @@ const HTML_CONTENT = `
 
         <div id="daily-section" style="display: none;">
             <h2>Daily Report Download</h2>
-
             <div class="date-selector">
                 <label for="daily-date">Select Date</label>
                 <input type="date" id="daily-date" required>
             </div>
-
             <div class="format-selector">
                 <div class="format-buttons">
-                    <!-- ✅ শুধু এক্সেল বাটন -->
                     <button class="format-btn excel" onclick="downloadDailyReport()">📊 Download Excel</button>
                 </div>
             </div>
-
             <button type="button" onclick="backToDownloadOptions()" class="btn-back">Back to Options</button>
         </div>
 
         <div id="monthly-section" style="display: none;">
             <h2>Monthly Report Download</h2>
-
             <div class="month-selector">
                 <label for="month-year">Select Month and Year</label>
                 <input type="month" id="month-year" required>
             </div>
-
             <div class="format-selector">
                 <div class="format-buttons">
-                    <!-- ✅ শুধু এক্সেল বাটন -->
                     <button class="format-btn excel" onclick="downloadMonthlyReport()">📊 Download Excel</button>
                 </div>
             </div>
-
             <button type="button" onclick="backToDownloadOptions()" class="btn-back">Back to Options</button>
         </div>
     </div>
@@ -303,7 +273,6 @@ const HTML_CONTENT = `
     function showDailyOptions() {
         document.getElementById('daily-section').style.display = 'block';
         document.getElementById('monthly-section').style.display = 'none';
-
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -314,7 +283,6 @@ const HTML_CONTENT = `
     function showMonthlyOptions() {
         document.getElementById('monthly-section').style.display = 'block';
         document.getElementById('daily-section').style.display = 'none';
-
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -326,7 +294,6 @@ const HTML_CONTENT = `
         document.getElementById('monthly-section').style.display = 'none';
     }
 
-    // ✅ শুধু এক্সেল ডাউনলোড ফাংশন
     function downloadDailyReport() {
         const date = document.getElementById('daily-date').value;
         if (!date) {
@@ -347,24 +314,19 @@ const HTML_CONTENT = `
 
     function setupAutocomplete(inputId, dataType) {
         const inp = document.getElementById(inputId);
-
         inp.addEventListener("input", function() {
             let a, b, val = this.value;
             closeAllLists();
-
             a = document.createElement("DIV");
             a.setAttribute("id", this.id + "autocomplete-list");
             a.setAttribute("class", "autocomplete-items");
             this.parentNode.appendChild(a);
-
             let arr = [];
             if(dataType === 'buyer') arr = dbData.buyers;
             if(dataType === 'style') arr = dbData.styles;
             if(dataType === 'print_type') arr = dbData.print_types;
-
             let matches = arr;
             if(val) matches = arr.filter(item => item.toUpperCase().includes(val.toUpperCase()));
-
             for (let i = 0; i < matches.length; i++) {
                 b = document.createElement("DIV");
                 b.innerHTML = matches[i];
@@ -376,7 +338,6 @@ const HTML_CONTENT = `
                 a.appendChild(b);
             }
         });
-
         inp.addEventListener("click", function() {
             this.dispatchEvent(new Event('input'));
         });
@@ -410,7 +371,7 @@ const HTML_CONTENT = `
             const data = await res.json();
             const tbody = document.getElementById('history-tbody');
             if(data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No data found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No data found.</td></tr>';
                 return;
             }
             tbody.innerHTML = data.map(row =>
@@ -418,6 +379,7 @@ const HTML_CONTENT = `
                     '<td>' + row.date + '</td>' +
                     '<td>' + row.buyer + '</td>' +
                     '<td>' + row.style + '</td>' +
+                    '<td>' + row.print_type + '</td>' +
                     '<td>' + row.quantity + '</td>' +
                     '<td><button class="btn-delete" onclick="deleteEntry(' + row.id + ')">Delete</button></td>' +
                 '</tr>'
@@ -529,11 +491,11 @@ export default {
             }
         }
 
-        // হিস্টরি API
+        // হিস্টরি API - প্রিন্ট টাইপ যোগ করা হয়েছে
         if (request.method === "GET" && url.pathname === "/api/history") {
             try {
                 const { results } = await env.DB.prepare(
-                    "SELECT id, date, buyer, style, quantity FROM production ORDER BY date DESC, id DESC LIMIT 200"
+                    "SELECT id, date, buyer, style, print_type, quantity FROM production ORDER BY date DESC, id DESC LIMIT 200"
                 ).all();
                 return new Response(JSON.stringify(results), {
                     headers: { ...headers, "Content-Type": "application/json" }
@@ -562,23 +524,24 @@ export default {
             }
         }
 
-        // সেভ API
+        // ✅ সেভ API - বায়ার, স্টাইল ও প্রিন্ট টাইপ তিনটাই মিলবে
         if (request.method === "POST" && url.pathname === "/api/save") {
             try {
                 const body = await request.json();
                 let finalCmDzn = body.cm_dzn;
 
+                // ✅ ফিক্স: বায়ার, স্টাইল ও প্রিন্ট টাইপ তিনটাই মিলবে
                 if (finalCmDzn === "" || finalCmDzn === null || finalCmDzn === undefined) {
                     const previousEntry = await env.DB.prepare(
-                        "SELECT cm_dzn FROM production WHERE buyer = ? AND style = ? AND cm_dzn IS NOT NULL ORDER BY id DESC LIMIT 1"
-                    ).bind(body.buyer, body.style).first();
+                        "SELECT cm_dzn FROM production WHERE buyer = ? AND style = ? AND print_type = ? AND cm_dzn IS NOT NULL ORDER BY id DESC LIMIT 1"
+                    ).bind(body.buyer, body.style, body.print_type).first();
 
                     if (previousEntry) {
                         finalCmDzn = previousEntry.cm_dzn;
                     } else {
                         return new Response(JSON.stringify({
                             success: false,
-                            error: "This is a new Style. Please provide CM per Dozen ($) for the first time!"
+                            error: "This is a new combination of Buyer, Style & Print Type. Please provide CM per Dozen ($) for the first time!"
                         }), { status: 400, headers: { ...headers, "Content-Type": "application/json" } });
                     }
                 } else {
@@ -602,7 +565,7 @@ export default {
             }
         }
 
-        // ✅ ডেইলি এক্সেল রিপোর্ট
+        // ডেইলি এক্সেল রিপোর্ট
         if (request.method === "GET" && url.pathname === "/api/daily-excel") {
             try {
                 const date = url.searchParams.get('date');
@@ -614,7 +577,7 @@ export default {
                 }
 
                 const { results } = await env.DB.prepare(
-                    "SELECT * FROM production WHERE date = ? ORDER BY print_type ASC, buyer ASC, style ASC"
+                    "SELECT * FROM production WHERE date = ? ORDER BY buyer ASC, style ASC, print_type ASC"
                 ).bind(date).all();
 
                 const buffer = await generateDailyExcelReport(results, date);
@@ -638,7 +601,7 @@ export default {
             }
         }
 
-        // ✅ মান্থলি এক্সেল রিপোর্ট
+        // মান্থলি এক্সেল রিপোর্ট
         if (request.method === "GET" && url.pathname === "/api/monthly-excel") {
             try {
                 const month = url.searchParams.get('month');
@@ -650,7 +613,7 @@ export default {
                 }
 
                 const { results } = await env.DB.prepare(
-                    "SELECT * FROM production WHERE strftime('%Y-%m', date) = ? ORDER BY print_type ASC, date ASC"
+                    "SELECT * FROM production WHERE strftime('%Y-%m', date) = ? ORDER BY buyer ASC, style ASC, print_type ASC"
                 ).bind(month).all();
 
                 const buffer = await generateMonthlyExcelReport(results, month);
@@ -673,11 +636,11 @@ export default {
             }
         }
 
-        // ব্যাকওয়ার্ড কম্প্যাটিবিলিটি - পুরানো এক্সেল API
+        // ব্যাকওয়ার্ড কম্প্যাটিবিলিটি
         if (request.method === "GET" && url.pathname === "/api/excel") {
             try {
                 const { results } = await env.DB.prepare(
-                    "SELECT * FROM production ORDER BY print_type ASC, date ASC"
+                    "SELECT * FROM production ORDER BY buyer ASC, style ASC, print_type ASC"
                 ).all();
                 const buffer = await generateExcelReport(results);
                 return new Response(buffer, {
@@ -691,8 +654,6 @@ export default {
                 return new Response(JSON.stringify({ error: err.message }), { status: 500, headers });
             }
         }
-
-        // ✅ সকল PDF এন্ডপয়েন্ট রিমুভ করা হয়েছে
 
         return new Response("Not Found", { status: 404, headers });
     }
