@@ -190,11 +190,11 @@ export async function generateMonthlyExcelReport(results, month) {
     const colWidths = {
         1: 3.765625,    // A - SL
         2: 12.43,  // B - Buyer
-        3: 12.10546875, // C - Style
-        4: 13.31640625, // D - Print Type
-        5: 7.26171875,  // E - CM/Doz
-        37: 9.55078125, // AK - Prev. Qty
-        38: 8.875,      // AL - Curr. M Qty
+        3: 8.86, // C - Style
+        4: 11.45, // D - Print Type
+        5: 4.43,  // E - CM/Doz
+        37: 7, // AK - Prev. Qty
+        38: 7.57,      // AL - Curr. M Qty
         39: 8.47265625, // AM - Total CM
     };
 
