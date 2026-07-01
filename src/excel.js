@@ -189,7 +189,7 @@ export async function generateMonthlyExcelReport(results, month) {
     // কলাম উইডথ
     const colWidths = {
         1: 3.765625,    // A - SL
-        2: 6.05078125,  // B - Buyer
+        2: 12.43,  // B - Buyer
         3: 12.10546875, // C - Style
         4: 13.31640625, // D - Print Type
         5: 7.26171875,  // E - CM/Doz
@@ -277,8 +277,8 @@ export async function generateMonthlyExcelReport(results, month) {
 
     // Summary headers
     const summaryHdrs = [
-        [37, 'Prev. Qty\n(Pcs)', darkNav],
-        [38, 'Curr. M Qty\n(Pcs)', darkNav],
+        [37, 'Pre. Qty\n(Pcs)', darkNav],
+        [38, 'Total Qty\n(Pcs)', darkNav],
         [39, 'Total CM\n($)', darkNav],
     ];
 
