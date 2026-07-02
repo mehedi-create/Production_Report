@@ -379,7 +379,7 @@ export async function generateMonthlyExcelReport(results, month) {
 
         // Curr. M Qty - SUM ফর্মুলা
         const cell38 = wsRow.getCell(38);
-        cell38.value = { formula: `SUM(F${currentRow}:AF${currentRow})` };
+        cell38.value = { formula: `SUM(F${currentRow}:AJ${currentRow})` };
         cell38.font = font(false, 10, 'FF000000');
         cell38.alignment = align('right', 'center');
         cell38.border = allThinBorder();
